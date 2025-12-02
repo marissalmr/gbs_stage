@@ -1,0 +1,48 @@
+from django.db import models
+
+class Client(models.Model):
+    nom = models.CharField(max_length=200)
+    email = models.CharField(max_length=300)
+    telephone = models.CharField(max_length=10)
+    adresse = models.CharField(max_length=200)
+    ville = models.CharField(max_length=100)
+    code_postal = models.CharField(max_length=5)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+class Dossiers(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='dossiers')
+    types_dossiers_choices = [
+        ('QUALIBAT', 'QUALIBAT'),
+        ('QUALIT_ENR', 'QUALIT’ENR'),
+        ('AEAO', 'AUDIT ENERGETIQUE AFNOR & OPQIBI'),
+        ('CERTIBAT', 'CERTIBAT'),
+        ('QUALIF_ELEC', 'QUALIF’ELEC'),
+        ('AMO', 'Accompagnateur Rénov'),
+    ]
+
+    type_dossier = models.CharField(max_length=50, choices=types_dossiers_choices)
+    statut_choices = [
+        ('en_attente', 'En attente'),
+        ('Incomplet' , 'Incomplet'),
+        ('validé', 'Validé'),
+    ]
+    statut = models.CharField(max_length=30,choices=statut_choices, default="en_attente")
+    eligibilite_estimee = models.BooleanField(default=False)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+class Documents(models.Model):
+    dossier = models.ForeignKey(Dossiers, on_delete=models.CASCADE,related_name='documents'),
+    nom = models.CharField(max_length=150),
+    type = models.CharField(max_length=150),
+
+class Prediagnostique(models.Model):
+    dossier = models.ForeignKey(Dossiers, on_delete=models.CASCADE,related_name='documents'),
+    question = models.CharField(max_length=200)
+    reponse = models.TextField()
+    score = models.IntegerField(null=True, blank=True)
+
+
+
+
+
+
