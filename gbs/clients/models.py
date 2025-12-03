@@ -7,6 +7,7 @@ class Client(models.Model):
     adresse = models.CharField(max_length=200)
     ville = models.CharField(max_length=100)
     code_postal = models.CharField(max_length=5)
+    siret = models.CharField(max_length=14, unique=True)
     date_creation = models.DateTimeField(auto_now_add=True)
 
 class Dossiers(models.Model):
