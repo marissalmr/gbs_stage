@@ -3,4 +3,9 @@ from .models import *
 
 class ClientForm(forms.ModelForm):
     model = Client
-    exclude = [['nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'siret']]
+    fields = ['nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'siret']
+
+class PrediagForm(forms.ModelForm):
+    model = Prediagnostique
+    fields = ['question', 'reponse']
+
