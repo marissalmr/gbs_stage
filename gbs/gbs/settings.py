@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+load_dotenv() # lit le .env et place les variables dans os.environ
+API_CLIENT_ID = os.getenv("API_CLIENT_ID") # récupère le secret et le met dans une variable Django.
+API_CLIENT_SECRET = os.getenv("API_CLIENT_SECRET")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'clients',
 ]
 
 MIDDLEWARE = [

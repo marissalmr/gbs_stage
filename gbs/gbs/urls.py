@@ -1,3 +1,4 @@
+from clients.views import prediag_view
 """
 URL configuration for gbs project.
 
@@ -19,4 +20,5 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('prediagnostic/', prediag_view),
 ]
