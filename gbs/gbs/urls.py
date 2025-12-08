@@ -1,4 +1,7 @@
 from clients.views import prediag_view
+from clients.views import check_siret
+from clients.views import prediagnostique_page
+
 """
 URL configuration for gbs project.
 
@@ -20,5 +23,6 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('prediagnostic/', prediag_view),
+    path('prediagnostic/', prediagnostique_page, name='prediagnostic'),
+    path('prediagnostic/check-siret/', check_siret, name='check_siret'),
 ]

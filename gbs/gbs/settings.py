@@ -128,3 +128,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+print("API_CLIENT_ID =", API_CLIENT_ID)
+print("API_CLIENT_SECRET =", API_CLIENT_SECRET)

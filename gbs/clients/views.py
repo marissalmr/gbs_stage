@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from .forms import *
-from api import *
+from .api import *
 
 def clean_siret(self):
     siret = self.cleaned_data['siret']
@@ -11,7 +11,7 @@ def clean_siret(self):
 def prediag_view(request):
     form = None 
     if request.method == "POST" : 
-        form = PrediagForm(request.POST) 
+        form = PrediagForm(request) 
         if form.is_valid():
             form.save()
             return redirect("thanks")
@@ -38,10 +38,13 @@ def check_siret(request):
         return JsonResponse({"valid": True, "data": data})
     
     except Exception as e:
-        
+
         # 5. Si INSEE renvoie une erreur, token expiré, mauvais siret, etc.
         # On informe le front avec valid=False
         return JsonResponse(
             {"valid": False, "error": str(e)},
             status=400  # encore une erreur due à la requête
         )
+
+def prediagnostique_page(request):
+    return render(request, "prediagnostic.html")

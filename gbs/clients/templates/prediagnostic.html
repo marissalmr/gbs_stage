@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification SIRET</title>
+</head>
+<body>
+    <h1>Vérification SIRET</h1>
+    
+    <input type="text" id="siret-input" placeholder="Entrez le SIRET">
+    <button id="check-btn">Vérifier</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const button = document.getElementById("check-btn");
+        const input = document.getElementById("siret-input");
+        const resultDiv = document.getElementById("result");
+
+        button.addEventListener("click", async () => {
+            const siret = input.value.replace(/\s/g, "");
+            if (!siret) {
+                resultDiv.textContent = "Veuillez entrer un SIRET";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/prediagnostic/check-siret/?siret=${siret}`);
+                const data = await response.json();
+
+                if (data.valid) {
+                    resultDiv.textContent = "SIRET valide ✅";
+                    console.log(data.data); // infos détaillées
+                } else {
+                    resultDiv.textContent = "SIRET invalide ❌ : " + data.error;
+                }
+            } catch (err) {
+                resultDiv.textContent = "Erreur serveur";
+            }
+        });
+    </script>
+</body>
+</html>

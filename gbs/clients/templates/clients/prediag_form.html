@@ -1,7 +1,69 @@
 <h2>Pré-diagnostic</h2>
 
-<form method="POST">
+<form method="POST" id="prediag-form">
     {% csrf_token %}
     {{ form.as_p }}
+
+    <!-- Message où le statut du SIRET sera affiché -->
+    <p id="siret-status" style="font-weight: bold;"></p>
+
     <button type="submit">Envoyer</button>
 </form>
+
+<script>
+// On récupère automatiquement le token CSRF généré par Django
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// On récupère l'input du SIRET (il doit exister dans ton form)
+const siretInput = document.querySelector('input[name="siret"]');
+
+// Zone où afficher les messages
+const statusBox = document.getElementById('siret-status');
+
+if (siretInput) {
+    // Déclenche la vérification dès que l'utilisateur sort du champ
+    siretInput.addEventListener('blur', () => {
+        const siretValue = siretInput.value.trim();
+
+        if (!siretValue) {
+            statusBox.textContent = "Veuillez entrer un SIRET.";
+            statusBox.style.color = "red";
+            return;
+        }
+
+        // Envoi AJAX vers ton endpoint Django
+        fetch("/prediagnostic/check-siret/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify({ siret: siretValue })
+        })
+        .then(response => response.json().then(data => ({status: response.status, body: data})))
+        .then(result => {
+            const { status, body } = result;
+
+            if (status === 200) {
+                // Réponse OK → on vérifie si le SIRET existe
+                if (body.exists) {
+                    statusBox.textContent = "🟢 SIRET valide : entreprise trouvée.";
+                    statusBox.style.color = "green";
+                } else {
+                    statusBox.textContent = "🔴 SIRET inconnu ou invalide.";
+                    statusBox.style.color = "red";
+                }
+            } else {
+                // Erreur envoyée depuis Django (status=400)
+                statusBox.textContent = "⚠️ Erreur : " + body.error;
+                statusBox.style.color = "red";
+            }
+        })
+        .catch(() => {
+            // Erreur serveur (status=500)
+            statusBox.textContent = "⚠️ Erreur serveur lors de la vérification.";
+            statusBox.style.color = "red";
+        });
+    });
+}
+</script>
