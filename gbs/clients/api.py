@@ -17,7 +17,7 @@ def _recup_token_insee(): #privé, interne au module
     Retourne un token valide (mis en cache pour éviter
     un appel au serveur INSEE à chaque requête).
     """
-def get_api_token():
+def get_insee_token():
     # 1. On regarde si un token existe déjà dans le cache
     cached = cache.get(TOKEN_CACHE_KEY)
     if cached:
@@ -36,5 +36,32 @@ def get_api_token():
     cache.set(TOKEN_CACHE_KEY, {"access_token": access_token}, timeout=ttl)
     
     return access_token
+
+# Déclare une fonction qui prend en entrée un numéro SIRET (14 chiffres).
+
+def verify_siret(siret):
+    token = get_insee_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    url = f"https://api.insee.fr/entreprises/sirene/V3/siret/{siret}"
+    resp = requests.get(url, headers=headers, timeout=10) 
+    # On envoie la requête HTTP vers l’INSEE. 1) headers contient le token, 
+    # 2)timeout=10 évite que ton serveur reste bloqué trop longtemps 
+    # 3) resp est la réponse (HTML, JSON, erreur, etc…)
+    if resp.status_code == 401 : 
+    # token possiblement expiré : on efface le cache et retente une fois
+        cache.delete(TOKEN_CACHE_KEY)
+        token = get_insee_token()
+        # Header obligatoire pour appeler l'API INSEE
+        headers = {"Authorization": f"Bearer {token}"}
+        # URL officielle pour récupérer les infos d'un SIRET
+        url = f"https://api.insee.fr/entreprises/sirene/V3/siret/{siret}"
+        resp = requests.get(url, headers=headers, timeout=10) 
+    else :
+        resp.raise_for_status()
+        return resp.json()
+
+
+
+
 
     
