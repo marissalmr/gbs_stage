@@ -3,12 +3,16 @@ from django.db import models
 class Client(models.Model):
     nom = models.CharField(max_length=200)
     email = models.CharField(max_length=300)
-    telephone = models.CharField(max_length=10)
+    telephone = models.CharField(max_length=50)
     adresse = models.CharField(max_length=200)
     ville = models.CharField(max_length=100)
     code_postal = models.CharField(max_length=5)
     siret = models.CharField(max_length=14, unique=True)
-    date_creation = models.DateTimeField(auto_now_add=True)
+    date_creation = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    statut_admin = models.CharField(max_length=250, blank=True, null=True)
+    nom_officiel = models.CharField(max_length=90, blank=True, null=True)
+    autres_noms = models.TextField(max_length=250, blank=True, null=True)
+    prenom_dirigeant = models.CharField(max_length=200, blank=True, null=True)
 
 class Dossiers(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='dossiers')

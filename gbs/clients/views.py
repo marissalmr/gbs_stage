@@ -1,3 +1,4 @@
+from urllib import response
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from .forms import *
@@ -30,22 +31,19 @@ def check_siret(request):
             status=400  # 400 = erreur du client
         )
     
-    # 3. On appelle ta fonction qui contacte INSEE + gère token + cache
-
-    try : 
-        data = verify_siret(siret)
-    # 4. Tout s'est bien passé → on renvoie les données
-        return JsonResponse({"valid": True, "data": data})
+    data = response.json()["etablissement"]
     
-    except Exception as e:
-
-        # 5. Si INSEE renvoie une erreur, token expiré, mauvais siret, etc.
-        # On informe le front avec valid=False
-        return JsonResponse(
-            {"valid": False, "error": str(e)},
-            status=400  # encore une erreur due à la requête
-        )
-
+    entreprise_info = {
+        "siret": data["siren"],
+        "date_creation": data["categorieJuridiqueUniteLegale"].get("dateCreationUniteLegale"),
+        "statut_admin": data["etatAdministratifUniteLegale"],
+        "nom_officiel": data["denominationUniteLegale"],
+        "autres_noms": data["denominationUsuelle1UniteLegale, denominationUsuelle2UniteLegale, denominationUsuelle3UniteLegale"], 
+        "prenom_dirigeant": data["nomUsageUniteLegale"].get("prenom1UniteLegale à prenom4UniteLegale"),
+}
+    return JsonResponse({"found": True, "data": entreprise_info})
+    
+    
 def prediagnostique_page(request):
     return render(request, "prediagnostic.html")
 

@@ -29,7 +29,7 @@
                 const data = await response.json();
 
                 if (data.valid) {
-                    resultDiv.textContent = "SIRET valide ✅";
+                    resultDiv.textContent = "SIRET valide ";
                     console.log(data.data); // infos détaillées
                 } else {
                     resultDiv.textContent = "SIRET invalide " + data.error;
