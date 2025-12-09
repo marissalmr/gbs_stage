@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBS - Accompagnement aux Certifications du Bâtiment</title>
+    
+{% load static %}
+<link rel="stylesheet" href="{% static 'home.css' %}">
+<script src="{% static 'home.js' %}">
+
+</script>
+
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">GBS</div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#about">À propos</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        Accompagnement aux Certifications
+                        <span class="gold-badge">QUALIBAT</span>
+                    </h1>
+                    
+                    <p class="hero-description">
+                        Experts du bâtiment depuis 2010.
+                        <br><br>
+                        GBS accompagne les entreprises du BTP dans le montage complet de leurs dossiers de qualifications et certifications : QUALIBAT, QUALIT'ENR, QUALIFELEC, OPQIBI, CERTIBAT…
+                        <br><br>
+                        Nous vous aidons aussi dans la création d'entreprise et assurons une gestion administrative complète afin que vous puissiez vous concentrer sur votre cœur de métier.
+                    </p>
+                    
+                    <a href="{% url 'prediagnostic' %}">
+    <button class="cta-button">Tester votre éligibilité →</button>
+</a>
+                
+                <div class="hero-visual">
+                    <div class="visual-placeholder"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="home.js"></script>
+</body>
+</html>

@@ -48,3 +48,6 @@ def check_siret(request):
 
 def prediagnostique_page(request):
     return render(request, "prediagnostic.html")
+
+def homepage(request):
+    return render(request, "home.html" )

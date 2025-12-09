@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Vérification SIRET</title>
+    <title>Test éligibilité</title>
 </head>
 <body>
     <h1>Vérification SIRET</h1>
@@ -32,7 +32,7 @@
                     resultDiv.textContent = "SIRET valide ✅";
                     console.log(data.data); // infos détaillées
                 } else {
-                    resultDiv.textContent = "SIRET invalide ❌ : " + data.error;
+                    resultDiv.textContent = "SIRET invalide " + data.error;
                 }
             } catch (err) {
                 resultDiv.textContent = "Erreur serveur";
