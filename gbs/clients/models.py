@@ -8,7 +8,7 @@ class Client(models.Model):
     ville = models.CharField(max_length=100)
     code_postal = models.CharField(max_length=5)
     siret = models.CharField(max_length=14, unique=True)
-    date_creation = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    date_creation = models.DateField(blank=True, null=True)
     statut_admin = models.CharField(max_length=250, blank=True, null=True)
     nom_officiel = models.CharField(max_length=90, blank=True, null=True)
     autres_noms = models.TextField(max_length=250, blank=True, null=True)

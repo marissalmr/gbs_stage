@@ -6,13 +6,13 @@ from .api import *
 
 def clean_siret(self):
     siret = self.cleaned_data['siret']
-    if len(siret)!=14 or siret.isdigit() :
+    if len(siret)!=14 or not siret.isdigit() :
         raise forms.ValidationError("Le SIRET doit contenir 14 chiffres.")
     
 def prediag_view(request):
     form = None 
     if request.method == "POST" : 
-        form = PrediagForm(request) 
+        form = PrediagForm(request.POST) 
         if form.is_valid():
             form.save()
             return redirect("thanks")
@@ -30,17 +30,57 @@ def check_siret(request):
             {"error": "Aucun SIRET fourni dans la requête."},
             status=400  # 400 = erreur du client
         )
+     # 3. On appelle ta fonction qui contacte INSEE + gère token + cache
+
+    try : 
+        data = verify_siret(siret)
+        print("JSON INSEE : ", data)
+
+
+    # 4. Tout s'est bien passé → on renvoie les données    
+    except Exception as e:
+        
+    # 5. Si INSEE renvoie une erreur, token expiré, mauvais siret, etc.
+    # On informe le front avec valid=False
+
+        return JsonResponse(
+            {"valid": False, "error": str(e)},
+            status=400  # encore une erreur due à la requête
+        )
     
-    data = response.json()["etablissement"]
+    etab = data["etablissement"]
+    unite = etab["uniteLegale"]
     
     entreprise_info = {
-        "siret": data["siren"],
-        "date_creation": data["categorieJuridiqueUniteLegale"].get("dateCreationUniteLegale"),
-        "statut_admin": data["etatAdministratifUniteLegale"],
-        "nom_officiel": data["denominationUniteLegale"],
-        "autres_noms": data["denominationUsuelle1UniteLegale, denominationUsuelle2UniteLegale, denominationUsuelle3UniteLegale"], 
-        "prenom_dirigeant": data["nomUsageUniteLegale"].get("prenom1UniteLegale à prenom4UniteLegale"),
-}
+        "siret": etab.get("siret"),
+        "siren": etab["siret"][:9],
+
+        "date_creation": unite.get("dateCreationUniteLegale"),
+        "statut_admin": unite.get("etatAdministratifUniteLegale"),
+        "nom_officiel": unite.get("denominationUniteLegale"),
+        "autres_noms": ", ".join([
+                unite.get("denominationUsuelle1UniteLegale") or "",
+                unite.get("denominationUsuelle2UniteLegale") or "",
+                unite.get("denominationUsuelle3UniteLegale") or ""  
+                ]),
+        "prenom_dirigeant": ", ".join([
+                unite.get("prenom1UniteLegale") or "",
+                unite.get("prenom2UniteLegale") or "",
+                unite.get("prenom3UniteLegale") or "",
+                unite.get("prenom4UniteLegale") or ""
+            ])
+        }
+    Client.objects.update_or_create(
+        siret= entreprise_info["siret"],
+         
+         defaults={
+        "date_creation": entreprise_info["date_creation"],
+        "statut_admin": entreprise_info["statut_admin"],
+        "nom_officiel": entreprise_info["nom_officiel"],
+        "autres_noms": entreprise_info["autres_noms"],
+        "prenom_dirigeant": entreprise_info["prenom_dirigeant"],
+    }
+    )
     return JsonResponse({"found": True, "data": entreprise_info})
     
     

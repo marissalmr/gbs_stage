@@ -3,6 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Test éligibilité</title>
+
+    <style>
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        .success {
+            background: #d7ffd9;
+            border: 1px solid #6ccf72;
+        }
+        .error {
+            background: #ffd7d7;
+            border: 1px solid #cf6c6c;
+        }
+    </style>
+
 </head>
 <body>
     <h1>Vérification SIRET</h1>
@@ -20,7 +39,8 @@
         button.addEventListener("click", async () => {
             const siret = input.value.replace(/\s/g, "");
             if (!siret) {
-                resultDiv.textContent = "Veuillez entrer un SIRET";
+                resultDiv.innerHTML = "Veuillez entrer un SIRET";
+                resultDiv.className = "error";
                 return;
             }
 
@@ -28,14 +48,27 @@
                 const response = await fetch(`/prediagnostic/check-siret/?siret=${siret}`);
                 const data = await response.json();
 
-                if (data.valid) {
-                    resultDiv.textContent = "SIRET valide ";
-                    console.log(data.data); // infos détaillées
+                if (data.found) {
+                    const entreprise = data.data;
+
+                    resultDiv.className = "success";
+
+                    resultDiv.innerHTML = `
+                        <h3>🎉 Félicitations, nous avons trouvé votre entreprise !</h3>
+                        <p><strong>SIRET :</strong> ${entreprise.siret}</p>
+                        <p><strong>Nom officiel :</strong> ${entreprise.nom_officiel || "Non renseigné"}</p>
+                        <p><strong>Date de création :</strong> ${entreprise.date_creation || "Non renseigné"}</p>
+                        <p><strong>Statut administratif :</strong> ${entreprise.statut_admin || "Non renseigné"}</p>
+                        <p><strong>Autres noms :</strong> ${entreprise.autres_noms || "Aucun"}</p>
+                        <p><strong>Dirigeant(s) :</strong> ${entreprise.prenom_dirigeant || "Non renseigné"}</p>
+                    `;
                 } else {
-                    resultDiv.textContent = "SIRET invalide " + data.error;
+                    resultDiv.className = "error";
+                    resultDiv.innerHTML = "SIRET invalide : " + data.error;
                 }
             } catch (err) {
-                resultDiv.textContent = "Erreur serveur";
+                resultDiv.className = "error";
+                resultDiv.innerHTML = "Erreur serveur";
             }
         });
     </script>
