@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Test éligibilité</title>
+    <title>Vérification SIRET et formulaire client</title>
 
     <style>
         #result {
@@ -20,8 +20,14 @@
             background: #ffd7d7;
             border: 1px solid #cf6c6c;
         }
+        #client-form-div {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #e0f0ff;
+            display: none; /* caché par défaut */
+        }
     </style>
-
 </head>
 <body>
     <h1>Vérification SIRET</h1>
@@ -31,16 +37,31 @@
     
     <div id="result"></div>
 
+    <!-- Formulaire Client (caché au départ) -->
+    <div id="client-form-div">
+        <h3>Complétez vos informations</h3>
+        <form method="POST" action="{% url 'formulaire_client' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <!-- Champ caché pour transmettre le SIRET automatiquement -->
+            <input type="hidden" name="siret" id="hidden-siret">
+            <button type="submit">Envoyer</button>
+        </form>
+    </div>
+
     <script>
         const button = document.getElementById("check-btn");
         const input = document.getElementById("siret-input");
         const resultDiv = document.getElementById("result");
+        const formDiv = document.getElementById("client-form-div");
+        const hiddenSiret = document.getElementById("hidden-siret");
 
         button.addEventListener("click", async () => {
             const siret = input.value.replace(/\s/g, "");
             if (!siret) {
                 resultDiv.innerHTML = "Veuillez entrer un SIRET";
                 resultDiv.className = "error";
+                formDiv.style.display = "none";
                 return;
             }
 
@@ -52,9 +73,8 @@
                     const entreprise = data.data;
 
                     resultDiv.className = "success";
-
                     resultDiv.innerHTML = `
-                        <h3>🎉 Félicitations, nous avons trouvé votre entreprise !</h3>
+                        <h3> Félicitations, nous avons trouvé votre entreprise !</h3>
                         <p><strong>SIRET :</strong> ${entreprise.siret}</p>
                         <p><strong>Nom officiel :</strong> ${entreprise.nom_officiel || "Non renseigné"}</p>
                         <p><strong>Date de création :</strong> ${entreprise.date_creation || "Non renseigné"}</p>
@@ -62,13 +82,21 @@
                         <p><strong>Autres noms :</strong> ${entreprise.autres_noms || "Aucun"}</p>
                         <p><strong>Dirigeant(s) :</strong> ${entreprise.prenom_dirigeant || "Non renseigné"}</p>
                     `;
+
+                    // Afficher le formulaire Client
+                    formDiv.style.display = "block";
+                    // Remplir le champ caché SIRET
+                    hiddenSiret.value = entreprise.siret;
+
                 } else {
                     resultDiv.className = "error";
-                    resultDiv.innerHTML = "SIRET invalide : " + data.error;
+                    resultDiv.innerHTML = "SIRET invalide : " + (data.error || "inconnu");
+                    formDiv.style.display = "none";
                 }
             } catch (err) {
                 resultDiv.className = "error";
                 resultDiv.innerHTML = "Erreur serveur";
+                formDiv.style.display = "none";
             }
         });
     </script>

@@ -47,21 +47,21 @@ if (siretInput) {
             if (status === 200) {
                 // Réponse OK → on vérifie si le SIRET existe
                 if (body.exists) {
-                    statusBox.textContent = "🟢 SIRET valide : entreprise trouvée.";
+                    statusBox.textContent = " SIRET valide : entreprise trouvée.";
                     statusBox.style.color = "green";
                 } else {
-                    statusBox.textContent = "🔴 SIRET inconnu ou invalide.";
+                    statusBox.textContent = " SIRET inconnu ou invalide.";
                     statusBox.style.color = "red";
                 }
             } else {
                 // Erreur envoyée depuis Django (status=400)
-                statusBox.textContent = "⚠️ Erreur : " + body.error;
+                statusBox.textContent = "Erreur : " + body.error;
                 statusBox.style.color = "red";
             }
         })
         .catch(() => {
             // Erreur serveur (status=500)
-            statusBox.textContent = "⚠️ Erreur serveur lors de la vérification.";
+            statusBox.textContent = " Erreur serveur lors de la vérification.";
             statusBox.style.color = "red";
         });
     });

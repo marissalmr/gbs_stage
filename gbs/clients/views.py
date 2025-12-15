@@ -18,7 +18,7 @@ def prediag_view(request):
             return redirect("thanks")
         else:
             form = PrediagForm()
-    return render(request, "clients/prediag_form.html", {"form": form})
+    return render(request, "clients/prediagnostic.html", {"form": form})
 
 def check_siret(request):
      # 1. Récupération du SIRET envoyé dans l'URL 
@@ -85,7 +85,21 @@ def check_siret(request):
     
     
 def prediagnostique_page(request):
-    return render(request, "prediagnostic.html")
+    form = ClientForm()
+    return render(request, "prediagnostic.html", {"form": form})
 
 def homepage(request):
     return render(request, "home.html" )
+
+def formulaire_client(request):
+    if request.method == "POST" :
+        form = ClientForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("thanks")
+        else : 
+            form = ClientForm()
+        return render(request, "clients/prediagnostic.html", {"form": form})
+
+def start_diag(request, client_id):
+    client = Client.objects.get(id=client_id)
