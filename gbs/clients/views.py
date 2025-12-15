@@ -3,7 +3,28 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from .forms import *
 from .api import *
+from .models import *
 
+ACTIVITES_CHOICES = [
+    ("isolation_exterieur", "Isolation extérieure / Ravalement"), #valeur_stockée, texte_affiché
+    ("isolation_interieur", "Isolation intérieure / Projection / Flocage / Soufflage"),
+    ("menuiserie_exterieure", "Menuiserie extérieure (fenêtres, Velux, portes)"),
+    ("couverture_isolation_toiture", "Couverture et isolation sous toiture"),
+    ("maconnerie_gros_oeuvre", "Maçonnerie - Gros œuvre – Béton "),
+    ("etancheite", "Étanchéité"),
+    ("carrelage_sol_pvc", "Carrelage / Sol PVC"),
+    ("platrerie_cloison", "Plâtrerie / Cloisons / Placoplatre"),
+    ("pac_vmc", "Pompe à chaleur / VMC"),
+    ("photovoltaique", "Panneaux photovoltaïques"),
+    ("chauffage", "Chauffage solaire / bois / gaz"),
+    ("irve", "IRVE (bornes de recharge électrique)"),
+    ("electricite", "Métier de l’électricité"),
+    ("autres", "Autres")
+     ]
+
+QUESTIONS_DIAG = [
+    {"question": "Que voulez-vous qualifier ?", "choices": ACTIVITES_CHOICES, "type": "multiple"},
+]
 def clean_siret(self):
     siret = self.cleaned_data['siret']
     if len(siret)!=14 or not siret.isdigit() :
@@ -102,4 +123,13 @@ def formulaire_client(request):
         return render(request, "clients/prediagnostic.html", {"form": form})
 
 def start_diag(request, client_id):
+
     client = Client.objects.get(id=client_id)
+    dossier_client = Dossiers.objects.create(
+        client = client,
+        type_dossier = '',
+        statut = 'en_attente',)
+    
+    return redirect(request, "clients/prediagnostic.html", dossier_client = dossier_client.id, question_number =1 ) 
+    
+    
