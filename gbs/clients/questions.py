@@ -15,6 +15,17 @@ ACTIVITES_CHOICES = [
     ("autres", "Autres")
      ]
 
+CA_CHOICES = [
+    ("<100k", "Moins de 100 000 €"),
+    ("100k-250k", "Entre 100 000 € et 250 000 €"),
+    ("250k-500k", "Entre 250 000 € et 500 000 €"),
+    ("500k-1M", "Entre 500 000 € et 1 million €"),
+    ("1M-2M", "Entre 1 et 2 millions €"),
+    ("2M-5M", "Entre 2 et 5 millions €"),
+    (">5M", "Plus de 5 millions €"),
+]
+
+
 QUESTIONS_DIAG = [
     {
         "id": 1,
@@ -34,7 +45,7 @@ QUESTIONS_DIAG = [
         "type" : "single",
         "show_if": {
             "question_id" : 2,
-            "question_choices" : "oui",
+            "value" : "oui",
         }
     }, 
     {"id": 3,
@@ -47,7 +58,17 @@ QUESTIONS_DIAG = [
             ("100", "100 % sous-traité"),
             ],        
             },
-            
+    {
+    "id": 4,
+     "question" :  "Quel est votre chiffre d’affaires annuel approximatif ?", 
+     "choices": CA_CHOICES,
+     "type": "unique",
+     "show_if" : {
+         "question_id" : 2,
+         "value" : "non",
+         }
+     },
+  
     ],
     
     
