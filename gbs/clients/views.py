@@ -13,15 +13,18 @@ def clean_siret(self):
     
 def prediag_view(request):
     if request.method == "POST" : 
-        form = PrediagForm(request.POST) 
+        form = ClientForm(request.POST) 
         if form.is_valid():
             form.save()
             return redirect("thanks")
     else:
-        form = PrediagForm()
+        form = ClientForm()
     
-    questions_json = json.dumps((QUESTIONS_DIAG))
-    return render(request, "clients/prediagnostic.html", {"form": form, "question_json" : questions_json})
+    questions_json = json.dumps(QUESTIONS_DIAG)
+    return render(request, "prediagnostic.html", {
+        "form": form,
+        "question_json" : questions_json
+        })
 
 def check_siret(request):
      # 1. Récupération du SIRET envoyé dans l'URL 
@@ -37,9 +40,7 @@ def check_siret(request):
 
     try : 
         data = verify_siret(siret)
-        print("JSON INSEE : ", data)
-
-
+        
     # 4. Tout s'est bien passé → on renvoie les données    
     except Exception as e:
         
@@ -56,8 +57,6 @@ def check_siret(request):
     
     entreprise_info = {
         "siret": etab.get("siret"),
-        "siren": etab["siret"][:9],
-
         "date_creation": unite.get("dateCreationUniteLegale"),
         "statut_admin": unite.get("etatAdministratifUniteLegale"),
         "nom_officiel": unite.get("denominationUniteLegale"),
@@ -96,13 +95,19 @@ def homepage(request):
 
 def formulaire_client(request):
     if request.method == "POST" :
-        form = ClientForm(request.POST)
-        if form.is_valid():
+        siret = request.POST.get('siret')
+    
+    if siret: 
+        client = Client.objects.filter(siret=siret).first()
+    else:
+        client = None
+
+    form = ClientForm(request.POST, instance=client)
+    if form.is_valid():
             form.save()
-            return redirect("thanks")
-        else : 
+    else : 
             form = ClientForm()
-        return render(request, "clients/prediagnostic.html", {"form": form})
+    return render(request, "prediagnostic.html", {"form": form})
 
 def start_diag(request, client_id):
 
@@ -112,6 +117,6 @@ def start_diag(request, client_id):
         type_dossier = '',
         statut = 'en_attente',)
     
-    return redirect(request, "clients/prediagnostic.html", dossier_client = dossier_client.id, question_number =1 ) 
+    return redirect(request, "prediagnostic.html", dossier_client = dossier_client.id, question_number =1 ) 
     
     

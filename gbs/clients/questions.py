@@ -13,7 +13,7 @@ ACTIVITES_CHOICES = [
     ("irve", "IRVE (bornes de recharge électrique)"),
     ("electricite", "Métier de l’électricité"),
     ("autres", "Autres")
-     ]
+                    ]
 
 CA_CHOICES = [
     ("<100k", "Moins de 100 000 €"),
@@ -23,7 +23,7 @@ CA_CHOICES = [
     ("1M-2M", "Entre 1 et 2 millions €"),
     ("2M-5M", "Entre 2 et 5 millions €"),
     (">5M", "Plus de 5 millions €"),
-]
+            ]   
 
 
 QUESTIONS_DIAG = [

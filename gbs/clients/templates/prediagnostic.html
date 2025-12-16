@@ -3,89 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <title>Vérification SIRET et formulaire client</title>
+
     <style>
-        body { font-family: Arial, sans-serif; }
         #result {
             margin-top: 20px;
             padding: 15px;
             border-radius: 8px;
             background: #f4f4f4;
+            font-family: Arial, sans-serif;
         }
-        .success { background: #d7ffd9; border: 1px solid #6ccf72; }
-        .error { background: #ffd7d7; border: 1px solid #cf6c6c; }
-        #client-form-div, #questions-div {
+
+        .success {
+            background: #d7ffd9;
+            border: 1px solid #6ccf72;
+        }
+
+        .error {
+            background: #ffd7d7;
+            border: 1px solid #cf6c6c;
+        }
+
+        #client-form-div {
             margin-top: 20px;
             padding: 15px;
             border-radius: 8px;
             background: #e0f0ff;
-            display: none; /* caché au départ */
+            display: none; /* caché par défaut */
         }
-        .question { margin-bottom: 15px; }
-        .question label { display: block; margin-bottom: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
+
     <h1>Vérification SIRET</h1>
-    
-    <!-- Input pour le SIRET et bouton vérifier -->
+
     <input type="text" id="siret-input" placeholder="Entrez le SIRET">
     <button id="check-btn">Vérifier</button>
-    
-    <!-- Résultat de la vérification -->
+
     <div id="result"></div>
 
-    <!-- Formulaire client (caché au départ) -->
+    <!-- Formulaire Client (caché au départ) -->
     <div id="client-form-div">
         <h3>Complétez vos informations</h3>
         <form method="POST" action="{% url 'formulaire_client' %}">
             {% csrf_token %}
             {{ form.as_p }}
+
+            <!-- Champ caché pour transmettre le SIRET automatiquement -->
             <input type="hidden" name="siret" id="hidden-siret">
+
             <button type="submit">Envoyer</button>
         </form>
     </div>
 
-    <!-- Questions dynamiques -->
-    <div id="questions-div">
-        <h3>Questions pré-diagnostic</h3>
-        <div id="questions-container"></div>
-    </div>
-
     <script>
-        // Récupération du JSON des questions passé depuis Django
-        const questions = JSON.parse('{{ question_json|escapejs }}');
-
-        // Récupération des éléments HTML
         const button = document.getElementById("check-btn");
         const input = document.getElementById("siret-input");
         const resultDiv = document.getElementById("result");
         const formDiv = document.getElementById("client-form-div");
         const hiddenSiret = document.getElementById("hidden-siret");
-        const questionsDiv = document.getElementById("questions-div");
-        const questionsContainer = document.getElementById("questions-container");
 
-        // Événement du bouton vérifier
         button.addEventListener("click", async () => {
             const siret = input.value.replace(/\s/g, "");
 
-            // Vérifie que le SIRET n'est pas vide
             if (!siret) {
-                resultDiv.innerHTML = "Veuillez entrer un SIRET";
                 resultDiv.className = "error";
+                resultDiv.innerHTML = "Veuillez entrer un SIRET";
                 formDiv.style.display = "none";
-                questionsDiv.style.display = "none";
                 return;
             }
 
             try {
-                // Appel de l'API Django pour vérifier le SIRET
                 const response = await fetch(`/prediagnostic/check-siret/?siret=${siret}`);
                 const data = await response.json();
 
                 if (data.found) {
                     const entreprise = data.data;
 
-                    // Affiche les infos de l'entreprise
                     resultDiv.className = "success";
                     resultDiv.innerHTML = `
                         <h3>Félicitations, nous avons trouvé votre entreprise !</h3>
@@ -97,64 +90,25 @@
                         <p><strong>Dirigeant(s) :</strong> ${entreprise.prenom_dirigeant || "Non renseigné"}</p>
                     `;
 
-                    // Affiche le formulaire client et remplit le SIRET
+                    // Affiche le formulaire
                     formDiv.style.display = "block";
+
+                    // Remplit le champ caché avec le SIRET
                     hiddenSiret.value = entreprise.siret;
 
-                    // Génère les questions dynamiques
-                    questionsDiv.style.display = "block";
-                    questionsContainer.innerHTML = ""; // reset
-
-                    questions.forEach(q => {
-                        const div = document.createElement("div");
-                        div.className = "question";
-
-                        const label = document.createElement("label");
-                        label.textContent = q.question;
-                        div.appendChild(label);
-
-                        // Crée des boutons selon le type
-                        if (q.type === "multiple") {
-                            q.choices.forEach(c => {
-                                const inputEl = document.createElement("input");
-                                inputEl.type = "checkbox";
-                                inputEl.name = `question_${q.id}`;
-                                inputEl.value = c[0];
-                                div.appendChild(inputEl);
-                                div.appendChild(document.createTextNode(" " + c[1]));
-                                div.appendChild(document.createElement("br"));
-                            });
-                        } else { // single = radio
-                            q.choices.forEach(c => {
-                                const inputEl = document.createElement("input");
-                                inputEl.type = "radio";
-                                inputEl.name = `question_${q.id}`;
-                                inputEl.value = c[0];
-                                div.appendChild(inputEl);
-                                div.appendChild(document.createTextNode(" " + c[1]));
-                                div.appendChild(document.createElement("br"));
-                            });
-                        }
-
-                        questionsContainer.appendChild(div);
-                    });
-
                 } else {
-                    // Si SIRET invalide
                     resultDiv.className = "error";
                     resultDiv.innerHTML = "SIRET invalide : " + (data.error || "inconnu");
                     formDiv.style.display = "none";
-                    questionsDiv.style.display = "none";
                 }
 
             } catch (err) {
-                // Erreur serveur
                 resultDiv.className = "error";
                 resultDiv.innerHTML = "Erreur serveur";
                 formDiv.style.display = "none";
-                questionsDiv.style.display = "none";
             }
         });
     </script>
+
 </body>
 </html>

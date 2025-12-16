@@ -4,7 +4,7 @@ from .models import *
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'siret']
+        fields = ['nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal']
 
 class PrediagForm(forms.ModelForm):
     class Meta:
