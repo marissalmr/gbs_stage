@@ -44,7 +44,7 @@ class Prediagnostique(models.Model):
     dossier = models.ForeignKey(Dossiers, on_delete=models.CASCADE,related_name='documents'),
     question = models.CharField(max_length=200)
     reponse = models.TextField()
-    sous_traitance = models.BooleanField(default=False)
+    sous_traitee = models.BooleanField(default=False)
     score = models.IntegerField(null=True, blank=True)
 
 

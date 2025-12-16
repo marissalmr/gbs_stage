@@ -1,13 +1,10 @@
-from urllib import response
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from .forms import *
 from .api import *
 from .models import *
-
-
-
-
+import json
+from .questions import *
 
 def clean_siret(self):
     siret = self.cleaned_data['siret']
@@ -15,15 +12,16 @@ def clean_siret(self):
         raise forms.ValidationError("Le SIRET doit contenir 14 chiffres.")
     
 def prediag_view(request):
-    form = None 
     if request.method == "POST" : 
         form = PrediagForm(request.POST) 
         if form.is_valid():
             form.save()
             return redirect("thanks")
-        else:
-            form = PrediagForm()
-    return render(request, "clients/prediagnostic.html", {"form": form})
+    else:
+        form = PrediagForm()
+    
+    questions_json = json.dumps((QUESTIONS_DIAG))
+    return render(request, "clients/prediagnostic.html", {"form": form, "question_json" : questions_json})
 
 def check_siret(request):
      # 1. Récupération du SIRET envoyé dans l'URL 

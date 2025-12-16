@@ -43,12 +43,11 @@ QUESTIONS_DIAG = [
             ("non", "Non"),
         ],
         "type" : "single",
-        "show_if": {
-            "question_id" : 2,
-            "value" : "oui",
-        }
+       
     }, 
-    {"id": 3,
+
+    {
+        "id": 3,
       "question": "Environ quel pourcentage de cette activité confiez-vous à des sous-traitants ?",
         "choices": [
             ("<25", "Moins de 25 %"),
@@ -56,13 +55,18 @@ QUESTIONS_DIAG = [
             ("50-75", "Entre 50 % et 75 %"),
             (">75", "Plus de 75 %"),
             ("100", "100 % sous-traité"),
-                    ],        
+                    ], 
+            "type" : "single",
+            "show_if": {
+                        "question_id" : 2,
+                        "value" : "oui",
+                        }       
             },
     {
         "id": 4,
         "question" :  "Quel est votre chiffre d’affaires annuel approximatif ?", 
         "choices": CA_CHOICES,
-        "type": "unique",
+        "type": "single",
         "show_if" : {
                     "question_id" : 2,
                     "value" : "non",
@@ -73,48 +77,49 @@ QUESTIONS_DIAG = [
      {
         "id": 5,
      "question" :  "Avez-vous déjà réglé des frais de dossier ou un bon de commande auprès de QUALIBAT en 2025 ?", 
-     "choices": {
-        [
+     "choices":[
+        
          ("oui", "Oui"),
-         ("non", "Non")
-        ]
-                }, 
+         ("non", "Non"),
+                ], 
+        "type" : "single",
      },
 
      {
         "id": 6,
      "question" :  "Avez-vous déjà suivi une formation RENOV’PERF (transverse et/ou modules métiers) ?", 
-     "choices": {
-        [
+     "choices": [
+        
          ("oui", "Oui"),
-         ("non", "Non")
-        ]
-                }, 
+         ("non", "Non"),
+        
+                ], 
+        "type" : "single",
      },
      
      {
         "id": 7,
      "question" :  "Combien d’ouvriers interviennent habituellement sur vos chantiers ?", 
-     "choices": {
-        [
+     "choices": [
+        
             ("moins_10", "Moins de 10 ouvriers"),
             ("plus_10", "10 ouvriers ou plus"),
-        ]
-                },  
+        
+                ],  
+        "type" : "single",
      },
 
      {
         "id": 8,
      "question" :  "Combien de chantiers de fourniture et pose d’isolants avez-vous déjà réalisés pour ces activités ?", 
-     "choices": {
-         [
+     "choices": [
+         
             ("0_2", "Moins de 3 chantiers"),
             ("3_plus", "3 chantiers ou plus"),
-            ],
-                }, 
+            
+                ],
+            "type" : "single",
      },
-
-
   
     ],
     
