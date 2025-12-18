@@ -25,8 +25,8 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('prediagnostic/', prediag_view, name='siret'), #Quand un utilisateur va sur /prediagnostic, Django exécute la fonction prediagnostique_page
-    path('prediagnostic/check-siret/', check_siret),
+    path('prediagnostic/', prediag_view, name='prediagnostic'), #Quand un utilisateur va sur /prediagnostic, Django exécute la fonction prediagnostique_page
+    path('prediagnostic/check-siret/', check_siret, name="check_siret"),
     path('homepage/', homepage),
     path('prediagnostic/formulaire/', formulaire_client, name="formulaire_client")
 ]

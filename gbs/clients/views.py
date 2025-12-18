@@ -12,18 +12,28 @@ def clean_siret(self):
         raise forms.ValidationError("Le SIRET doit contenir 14 chiffres.")
     
 def prediag_view(request):
-    if request.method == "POST" : 
+    if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest": 
         form = ClientForm(request.POST) 
         if form.is_valid():
-            form.save()
-            return redirect("thanks")
-    else:
+            client = form.save()
+            # Retourne une réponse JSON pour AJAX
+            return JsonResponse({
+                "success": True,
+                "client_id": client.id,
+                "questions" : QUESTIONS_DIAG
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "errors": form.errors
+            }, status=400)
+    else :
         form = ClientForm()
     
     questions_json = json.dumps(QUESTIONS_DIAG)
     return render(request, "prediagnostic.html", {
         "form": form,
-        "question_json" : questions_json
+        "questions_json" : questions_json
         })
 
 def check_siret(request):
@@ -94,21 +104,35 @@ def homepage(request):
     return render(request, "home.html" )
 
 def formulaire_client(request):
-    if request.method == "POST" :
+    siret = None 
+    # Vérifie si le formulaire a été soumis en méthode POST
+    if request.method == "POST":
+        # Récupère le SIRET envoyé dans le formulaire
         siret = request.POST.get('siret')
     
-    if siret: 
+    # Si un SIRET a été fourni, on cherche le client correspondant en base
+    if siret:
+        # filter() renvoie un QuerySet, .first() permet de récupérer le premier objet ou None
         client = Client.objects.filter(siret=siret).first()
     else:
+        # Aucun SIRET fourni → pas de client existant
         client = None
 
+    # Crée un formulaire Django avec les données POST
+    # Si client existe, on va mettre à jour ce client (instance=client)
+    # Sinon, on créera un nouveau client à l'enregistrement
     form = ClientForm(request.POST, instance=client)
-    if form.is_valid():
-            form.save()
-    else : 
-            form = ClientForm()
-    return render(request, "prediagnostic.html", {"form": form})
 
+    # Vérifie si les données du formulaire sont valides
+    if form.is_valid():
+        # Enregistre le client en base (nouveau ou mise à jour)
+        form.save()
+    else:
+        # Si les données ne sont pas valides, réinitialise le formulaire vide
+        form = ClientForm()
+
+    # Affiche le template 'prediagnostic.html' avec le formulaire (mis à jour ou vide)
+    return render(request, "prediagnostic.html", {"form": form})
 def start_diag(request, client_id):
 
     client = Client.objects.get(id=client_id)
