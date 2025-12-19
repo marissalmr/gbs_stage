@@ -4,7 +4,6 @@ from .forms import *
 from .api import *
 from .models import *
 import json
-from .questions import *
 
 def clean_siret(self):
     siret = self.cleaned_data['siret']
@@ -12,29 +11,18 @@ def clean_siret(self):
         raise forms.ValidationError("Le SIRET doit contenir 14 chiffres.")
     
 def prediag_view(request):
-    if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest": 
-        form = ClientForm(request.POST) 
+    if request.method == "POST" :
+        siret = request.POST.get("siret")
+        client = Client.objects.filter(siret=siret).first()
+        form = ClientForm(request.POST, instance=client) 
         if form.is_valid():
-            client = form.save()
-            # Retourne une réponse JSON pour AJAX
-            return JsonResponse({
-                "success": True,
-                "client_id": client.id,
-                "questions" : QUESTIONS_DIAG
-            })
-        else:
-            return JsonResponse({
-                "success": False,
-                "errors": form.errors
-            }, status=400)
+            client = form.save(commit=False)
+            form.save()
+            return redirect("questionnaire")   
     else :
         form = ClientForm()
-    
-    questions_json = json.dumps(QUESTIONS_DIAG)
-    return render(request, "prediagnostic.html", {
-        "form": form,
-        "questions_json" : questions_json
-        })
+    return render(request, 'prediagnostic.html', {"form": form})
+
 
 def check_siret(request):
      # 1. Récupération du SIRET envoyé dans l'URL 
@@ -67,6 +55,8 @@ def check_siret(request):
     
     entreprise_info = {
         "siret": etab.get("siret"),
+        "siren": etab["siret"][:9],
+
         "date_creation": unite.get("dateCreationUniteLegale"),
         "statut_admin": unite.get("etatAdministratifUniteLegale"),
         "nom_officiel": unite.get("denominationUniteLegale"),
@@ -93,6 +83,7 @@ def check_siret(request):
         "prenom_dirigeant": entreprise_info["prenom_dirigeant"],
     }
     )
+    
     return JsonResponse({"found": True, "data": entreprise_info})
     
     
@@ -143,4 +134,5 @@ def start_diag(request, client_id):
     
     return redirect(request, "prediagnostic.html", dossier_client = dossier_client.id, question_number =1 ) 
     
-    
+def questionnaire_page(request):
+    return render(request, "questionnaire_eligibilite.html")

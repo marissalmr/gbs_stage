@@ -9,7 +9,7 @@ class ClientForm(forms.ModelForm):
 class PrediagForm(forms.ModelForm):
     class Meta:
         model = Prediagnostique
-        fields = ['question', 'reponse', 'sous_traitee']
+        fields = ['reponse', 'sous_traitee']
         widgets = {
                 'sous_traitee': forms.RadioSelect(
                     choices=[
