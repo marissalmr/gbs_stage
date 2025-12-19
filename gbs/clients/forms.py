@@ -6,16 +6,4 @@ class ClientForm(forms.ModelForm):
         model = Client
         fields = ['nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal']
 
-class PrediagForm(forms.ModelForm):
-    class Meta:
-        model = Prediagnostique
-        fields = ['reponse', 'sous_traitee']
-        widgets = {
-                'sous_traitee': forms.RadioSelect(
-                    choices=[
-                        (True, "Oui"),
-                        (False, "Non"),
-                    ]
-                )
-            }
 

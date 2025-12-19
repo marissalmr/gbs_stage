@@ -40,11 +40,26 @@ class Documents(models.Model):
     nom = models.CharField(max_length=150),
     type = models.CharField(max_length=150),
 
+
+class Question(models.Model):
+    question = models.TextField()
+    id_client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="id_client"),
+
+
+class Reponse(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="reponses")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="reponses")
+    valeur = models.TextField()
+
+
 class Prediagnostique(models.Model):
     dossier = models.ForeignKey(Dossiers, on_delete=models.CASCADE,related_name='documents'),
     reponse = models.TextField()
     sous_traitee = models.BooleanField(default=False)
     score = models.IntegerField(null=True, blank=True)
+
+
+
 
 
 
