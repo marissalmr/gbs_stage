@@ -42,14 +42,23 @@ class Documents(models.Model):
 
 
 class Question(models.Model):
-    question = models.TextField()
-    id_client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="id_client"),
-
-
+    code = models.CharField(max_length=200,)
+    texte_question = models.TextField()
+    
+    type = models.CharField( #Définit comment l’utilisateur peut répondre
+        max_length=10,
+        choices=[
+                ("single", "Choix unique"),
+                ("multiple", "Choix multiple"),
+                ]
+)
+    choices = models.JSONField(default=list)
+    
+    
 class Reponse(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="reponses")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="reponses")
-    valeur = models.TextField()
+    reponse_user = models.JSONField()
 
 
 class Prediagnostique(models.Model):

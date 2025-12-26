@@ -17,6 +17,7 @@ def prediag_view(request):
         form = ClientForm(request.POST, instance=client) 
         if form.is_valid():
             client = form.save(commit=False)
+            request.session["client_id"] = client.id
             form.save()
             return redirect("questionnaire")   
     else :
@@ -85,7 +86,8 @@ def check_siret(request):
     )
     
     return JsonResponse({"found": True, "data": entreprise_info})
-    
+
+
     
 def prediagnostique_page(request):
     form = ClientForm()
@@ -136,3 +138,31 @@ def start_diag(request, client_id):
     
 def questionnaire_page(request):
     return render(request, "questionnaire_eligibilite.html")
+
+def questionnaire(request):
+    # On récupère toutes les questions en base
+    questions = Question.objects.all()
+
+    if request.method == "POST":
+         # On recrée le formulaire AVEC les données envoyées + liste questions
+        form = QuestionnaireForm(request.POST, questions=questions)
+        if form.is_valid(): 
+             # On parcourt toutes les réponses du formulaire
+            for question_id, reponse in form.cleaned_data.items():
+                # On récupère la question correspondante
+                question = Question.objects.get(id=question_id)
+                client = Client.objects.get(id=request.session.get("client_id"))
+
+                Reponse.objects.create(
+                    client = client,
+                    question = question,
+                    reponse_user = reponse
+
+                )
+                
+            return redirect("success")
+                
+    
+    form = QuestionnaireForm(questions=questions)
+    return render(request, "questionnaire_eligibilite.html", {"form": form})
+
