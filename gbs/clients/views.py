@@ -13,11 +13,11 @@ def clean_siret(self):
 def prediag_view(request):
     if request.method == "POST" :
         siret = request.POST.get("siret")
-        client = Client.objects.filter(siret=siret).first()
-        form = ClientForm(request.POST, instance=client) 
+        contact = Contact.objects.filter(siret=siret).first()
+        form = ClientForm(request.POST, instance=contact) 
         if form.is_valid():
-            client = form.save(commit=False)
-            request.session["client_id"] = client.id
+            contact = form.save(commit=False)
+            request.session["contact_id"] = contact.id
             form.save()
             return redirect("questionnaire")   
     else :
@@ -73,7 +73,7 @@ def check_siret(request):
                 unite.get("prenom4UniteLegale") or ""
             ])
         }
-    Client.objects.update_or_create(
+    Contact.objects.update_or_create(
         siret= entreprise_info["siret"],
          
          defaults={
@@ -106,15 +106,15 @@ def formulaire_client(request):
     # Si un SIRET a été fourni, on cherche le client correspondant en base
     if siret:
         # filter() renvoie un QuerySet, .first() permet de récupérer le premier objet ou None
-        client = Client.objects.filter(siret=siret).first()
+        contact = Contact.objects.filter(siret=siret).first()
     else:
         # Aucun SIRET fourni → pas de client existant
-        client = None
+        contact = None
 
     # Crée un formulaire Django avec les données POST
     # Si client existe, on va mettre à jour ce client (instance=client)
     # Sinon, on créera un nouveau client à l'enregistrement
-    form = ClientForm(request.POST, instance=client)
+    form = ClientForm(request.POST, instance=contact)
 
     # Vérifie si les données du formulaire sont valides
     if form.is_valid():
@@ -126,11 +126,11 @@ def formulaire_client(request):
 
     # Affiche le template 'prediagnostic.html' avec le formulaire (mis à jour ou vide)
     return render(request, "prediagnostic.html", {"form": form})
-def start_diag(request, client_id):
+def start_diag(request, contact_id):
 
-    client = Client.objects.get(id=client_id)
+    contact = Contact.objects.get(id=contact_id)
     dossier_client = Dossiers.objects.create(
-        client = client,
+        contact = contact,
         type_dossier = '',
         statut = 'en_attente',)
     
@@ -151,10 +151,10 @@ def questionnaire(request):
             for question_id, reponse in form.cleaned_data.items():
                 # On récupère la question correspondante
                 question = Question.objects.get(id=question_id)
-                client = Client.objects.get(id=request.session.get("client_id"))
+                contact = Contact.objects.get(id=request.session.get("client_id"))
 
                 Reponse.objects.create(
-                    client = client,
+                    contact = contact,
                     question = question,
                     reponse_user = reponse
 

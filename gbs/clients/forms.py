@@ -3,7 +3,8 @@ from .models import *
 
 class ClientForm(forms.ModelForm):
     class Meta:
-        model = Client
+        model = Contact
+    
         fields = ['nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal']
 
 from django import forms

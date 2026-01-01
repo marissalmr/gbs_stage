@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Client, Dossiers, Documents, Prediagnostique, Question, Reponse
+from .models import Contact, Dossiers, Documents, Prediagnostique, Question, Reponse
 
-admin.site.register(Client)
+admin.site.register(Contact)
 admin.site.register(Dossiers)
 admin.site.register(Documents)
 admin.site.register(Prediagnostique)
@@ -12,7 +12,7 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Reponse)
 class ReponseAdmin(admin.ModelAdmin):
-    list_display = ['client', 'question', 'reponse_user']
+    list_display = ['dossier','contact', 'question', 'reponse_user']
  
 #Pour voir les données enregistrés
 # Register your models here.
