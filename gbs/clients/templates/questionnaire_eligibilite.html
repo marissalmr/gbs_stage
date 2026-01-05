@@ -1,20 +1,600 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Questionnaire</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Questionnaire d'éligibilité - GBS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --gold: #D4AF37;
+    --gold-light: rgba(212, 175, 55, 0.08);
+    --gold-medium: rgba(212, 175, 55, 0.15);
+    --anthracite: #1A1A1A;
+    --anthracite-light: #2A2A2A;
+    --neutral-50: #FAFAFA;
+    --neutral-100: #F5F5F5;
+    --neutral-200: #E5E5E5;
+    --neutral-300: #D4D4D4;
+    --neutral-600: #525252;
+    --neutral-800: #262626;
+    --white: #FFFFFF;
+}
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body { 
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--neutral-50);
+    color: var(--anthracite);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.6;
+}
+
+/* Progress bar redesign - 6px height with subtle gradient */
+.progress-bar { 
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--neutral-200);
+    z-index: 1000;
+}
+
+.progress-fill { 
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold) 0%, #E5C158 100%);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.main-content { 
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1.5rem;
+    margin-top: 6px;
+}
+
+.container { 
+    width: 100%;
+    max-width: 48rem;
+}
+
+/* Enhanced step transitions */
+.step { 
+    display: none;
+    opacity: 0;
+    transform: translateY(2rem);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.step.active { 
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Redesigned badge with gold accent */
+.step-badge { 
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: var(--white);
+    border: 1px solid var(--neutral-200);
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.02em;
+}
+
+h1 { 
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--anthracite);
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.subtitle { 
+    font-size: 1.25rem;
+    color: var(--neutral-600);
+    margin-bottom: 2.5rem;
+    line-height: 1.5;
+}
+
+/* Input fields - 56px height, rounded-xl, gold focus */
+.input { 
+    width: 100%;
+    height: 56px;
+    padding: 0 1.25rem;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--white);
+    border: 2px solid var(--neutral-300);
+    border-radius: 0.875rem;
+    outline: none;
+    transition: all 0.2s ease;
+    color: var(--anthracite);
+}
+
+.input::placeholder {
+    color: var(--neutral-600);
+}
+
+.input:focus { 
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px var(--gold-light);
+}
+
+.input-grid { 
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Primary button with gold background */
+.btn { 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    height: 56px;
+    padding: 0 2rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    border-radius: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary { 
+    background: var(--gold);
+    color: var(--anthracite);
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) { 
+    background: #C9A032;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
+}
+
+.btn-primary:disabled { 
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Pulse animation for SIRET verification button */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+    }
+}
+
+.btn-primary.pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.btn-outline { 
+    background: var(--white);
+    color: var(--anthracite);
+    border: 2px solid var(--neutral-300);
+}
+
+.btn-outline:hover { 
+    border-color: var(--anthracite);
+    background: var(--neutral-50);
+}
+
+/* Option buttons as elegant cards with thick gold border on hover/selection */
+.btn-option { 
+    width: 100%;
+    min-height: 56px;
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    font-family: inherit;
+    background: var(--white);
+    border: 3px solid var(--neutral-200);
+    border-radius: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--anthracite);
+    line-height: 1.5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-option:hover { 
+    border-color: var(--gold);
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+}
+
+.btn-option.selected { 
+    border-color: var(--gold);
+    border-width: 3px;
+    background: var(--gold-medium);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+}
+
+.button-group { 
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.button-group .btn-outline { 
+    width: auto;
+    min-width: 120px;
+}
+
+.button-group .btn-primary { 
+    flex: 1;
+}
+
+/* Company info as business card with building icon */
+.company-info { 
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--neutral-100);
+    border: 1px solid var(--neutral-200);
+    border-radius: 0.875rem;
+    color: var(--anthracite);
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.company-info::before {
+    content: "🏢";
+    font-size: 1.5rem;
+}
+
+.company-info span {
+    font-weight: 600;
+    font-size: 1.0625rem;
+}
+
+.spinner { 
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(26, 26, 26, 0.2);
+    border-top-color: var(--anthracite);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { 
+    to { transform: rotate(360deg); }
+}
+
+.error-msg { 
+    color: #DC2626;
+    font-size: 0.9375rem;
+    margin-top: 0.75rem;
+    font-weight: 500;
+}
+
+.success-msg { 
+    color: #16A34A;
+    font-size: 0.9375rem;
+    margin-top: 0.75rem;
+    font-weight: 500;
+}
+
+.final-content { 
+    text-align: center;
+    padding: 2rem 0;
+}
+
+/* Success icon with gold background */
+.success-icon { 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    background: var(--gold-light);
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    border: 3px solid var(--gold);
+}
+
+footer { 
+    padding: 1.5rem;
+    border-top: 1px solid var(--neutral-200);
+    background: var(--white);
+}
+
+.footer-content { 
+    max-width: 48rem;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9375rem;
+    color: var(--neutral-600);
+}
+
+.footer-back-btn { 
+    background: none;
+    border: none;
+    color: var(--neutral-600);
+    cursor: pointer;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.footer-back-btn:hover:not(:disabled) { 
+    color: var(--anthracite);
+    background: var(--neutral-100);
+}
+
+.footer-back-btn:disabled { 
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.checkbox-list { 
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) { 
+    .input-grid { 
+        grid-template-columns: 1fr 1fr;
+    }
+
+    h1 {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 640px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 1.0625rem;
+    }
+
+    .main-content {
+        padding: 2rem 1rem;
+    }
+}
+</style>
 </head>
 <body>
 
-    <h1>Questionnaire d’éligibilité</h1>
+<div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
 
-    <form method="post">
-        {% csrf_token %}
+<main class="main-content">
+<div class="container">
 
-        {{ form.as_p }}
+<!-- Step 0: SIRET -->
+<div class="step active" data-step="0">
+    <div class="step-badge">Étape 1 / <span class="totalSteps">?</span></div>
+    <h1>Quel est votre numéro SIRET ?</h1>
+    <p class="subtitle">Nous vérifierons l'existence de votre entreprise</p>
+    <input type="text" id="siretInput" class="input" placeholder="Ex: 12345678901234" maxlength="14">
+    <div id="siretError" class="error-msg" style="display:none;"></div>
+    <button type="button" id="verifySiretBtn" class="btn btn-primary pulse" style="margin-top:1.5rem;" disabled>
+        <span id="btnText">Vérifier et continuer</span>
+    </button>
+</div>
 
-        <button type="submit">Valider</button>
-    </form>
+<!-- Step 1: Personal Info -->
+<div class="step" data-step="1">
+    <div class="step-badge">Étape 2 / <span class="totalSteps">?</span></div>
+    <h1>Vos informations de contact</h1>
+    <div class="company-info" id="companyInfo" style="display:none;">
+        <span id="companyName"></span>
+    </div>
+    <div style="margin-top:2rem;">
+        <input type="text" id="nom" class="input" placeholder="Nom complet" style="margin-bottom:1rem;">
+        <input type="email" id="email" class="input" placeholder="Email professionnel" style="margin-bottom:1rem;">
+        <input type="tel" id="telephone" class="input" placeholder="Téléphone" style="margin-bottom:1rem;">
+        <input type="text" id="adresse" class="input" placeholder="Adresse" style="margin-bottom:1rem;">
+        <div class="input-grid">
+            <input type="text" id="ville" class="input" placeholder="Ville">
+            <input type="text" id="code_postal" class="input" placeholder="Code postal" maxlength="5">
+        </div>
+        <div class="button-group">
+            <button type="button" class="btn btn-outline back-btn">Retour</button>
+            <button type="button" class="btn btn-primary next-btn" disabled>Continuer</button>
+        </div>
+    </div>
+</div>
 
+<!-- Question Steps (dynamiquement générées) -->
+<div id="questionSteps"></div>
+
+<!-- Final Step -->
+<div class="step" data-step="final">
+    <div class="final-content">
+        <div class="success-icon">✓</div>
+        <h1>Merci pour vos réponses !</h1>
+        <p class="subtitle">Votre dossier est en cours d'analyse. Un conseiller GBS vous contactera sous 48h.</p>
+        <button type="button" class="btn btn-primary" onclick="window.location.reload()">Nouvelle demande</button>
+    </div>
+</div>
+
+</div>
+</main>
+
+<footer>
+<div class="footer-content">
+    <button type="button" id="footerBackBtn" class="footer-back-btn" disabled>← Retour</button>
+    <span>GBS - Questionnaire d'éligibilité</span>
+</div>
+</footer>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let questions = [];
+let currentStep = 0;
+let totalSteps = 0;
+let formData = { siret:'', entrepriseData:{}, contact:{}, answers:{} };
+
+// -------------------- SIRET --------------------
+const siretInput = document.getElementById('siretInput');
+const verifyBtn = document.getElementById('verifySiretBtn');
+siretInput.addEventListener('input', () => {
+    formData.siret = siretInput.value.trim();
+    verifyBtn.disabled = formData.siret.length !== 14;
+});
+verifyBtn.addEventListener('click', async () => {
+    verifyBtn.disabled = true;
+    try {
+        const res = await fetch(`/api/check-siret/?siret=${formData.siret}`);
+        const data = await res.json();
+        if(!data.found) throw new Error('SIRET non trouvé');
+        formData.entrepriseData = data.data;
+        document.getElementById('companyName').textContent = data.data.nom_officiel;
+        document.getElementById('companyInfo').style.display = 'flex';
+        nextStep();
+    } catch(e) {
+        document.getElementById('siretError').style.display='block';
+        document.getElementById('siretError').innerText = e.message;
+        verifyBtn.disabled = false;
+    }
+});
+async function loadQuestions() {
+    const res = await fetch('/api/questions/');
+    const data = await res.json();
+    questions = data.questions;
+
+    const container = document.getElementById('questionSteps');
+    container.innerHTML = '';
+
+    questions.forEach((q, index) => {
+        const stepIndex = index + 2;
+
+        const div = document.createElement('div');
+        div.className = 'step';
+        div.dataset.step = stepIndex;
+
+        div.innerHTML = `
+            <div class="step-badge">Étape ${stepIndex + 1} / <span class="totalSteps"></span></div>
+            <h1>${q.text}</h1>
+            <div class="checkbox-list">
+                ${q.options.map(opt => `
+                    <button class="btn-option"
+                        onclick="submitAnswer(${q.id}, '${opt.replace(/'/g, "\\'")}')">
+                        ${opt}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+
+        container.appendChild(div);
+        
+    });
+
+    totalSteps = questions.length + 3;
+    document.querySelectorAll('.totalSteps').forEach(el => el.innerText = totalSteps);
+}
+
+// -------------------- CONTACT --------------------
+['nom','email','telephone','adresse','ville','code_postal'].forEach(f=>{
+    document.getElementById(f).addEventListener('input', ()=>{
+        formData.contact[f] = document.getElementById(f).value.trim();
+        document.querySelector('[data-step="1"] .next-btn').disabled = !Object.values(formData.contact).every(v=>v);
+    });
+});
+document.querySelector('[data-step="1"] .next-btn')
+.addEventListener('click', async () => {
+    try {
+        const res = await fetch('/save_contact/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                ...formData.contact,
+                ...formData.entrepriseData,
+                siret: formData.siret
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Erreur sauvegarde contact');
+        }
+
+        await loadQuestions();
+        nextStep();
+
+    } catch (e) {
+        console.error('Erreur save_contact:', e);
+        alert(e.message);
+    }
+});
+
+async function submitAnswer(qid,value){
+    formData.answers[qid] = value;
+    try{
+        await fetch('/save_answer/', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN},
+            body:JSON.stringify({question_id:qid, answer:value})
+        });
+    }catch(e){console.error(e);}
+    nextStep();
+}
+
+// -------------------- NAV --------------------
+function showStep(stepNum){
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    const el = stepNum==='final'?document.querySelector('.step[data-step="final"]'):
+        document.querySelector(`.step[data-step="${stepNum}"]`);
+    if(el) el.classList.add('active');
+    updateProgress();
+}
+function updateProgress(){ document.getElementById('progressBar').style.width=((currentStep+1)/totalSteps)*100+'%'; }
+function nextStep(){ currentStep++; showStep(currentStep===totalSteps-1?'final':currentStep); }
+function prevStep(){ if(currentStep>0){currentStep--; showStep(currentStep);} }
+document.querySelectorAll('.back-btn').forEach(b=>b.addEventListener('click',prevStep));
+document.getElementById('footerBackBtn').addEventListener('click',prevStep);
+
+</script>
 </body>
 </html>

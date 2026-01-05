@@ -10,7 +10,7 @@ class Entreprise(models.Model):
 
 class Contact(models.Model):
     nom = models.CharField(max_length=200)
-    email = models.CharField(max_length=300)
+    email = models.CharField(max_length=300, unique=True)
     telephone = models.CharField(max_length=50)
     adresse = models.CharField(max_length=200)
     ville = models.CharField(max_length=100)
@@ -61,8 +61,8 @@ class Question(models.Model):
     type = models.CharField( #Définit comment l’utilisateur peut répondre
         max_length=10,
         choices=[
-                ("single", "Choix unique"),
-                ("multiple", "Choix multiple"),
+                ("single", "single"),
+                ("multiple", "multiple"),
                 ]
 )
     choices = models.JSONField(default=list)

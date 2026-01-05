@@ -25,6 +25,9 @@ class QuestionnaireForm(forms.Form):
         # On parcourt chaque question récupérée depuis la base
         for question in questions:
             choices_list = question.choices if question.choices else []
+            
+            if choices_list and not isinstance(choices_list[0], tuple):
+                choices_list = [(c, c) for c in choices_list]
 
             # CAS 1 : question à choix UNIQUE (radio buttons)
             if question.type == "single":

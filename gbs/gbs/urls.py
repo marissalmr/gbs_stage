@@ -1,8 +1,13 @@
-from clients.views import prediag_view
 from clients.views import check_siret
 from clients.views import prediag_view
 from clients.views import homepage
 from clients.views import questionnaire
+from clients.views import api_questions
+from clients.views import save_answer
+from clients.views import save_contact
+
+
+
 
 """
 URL configuration for gbs project.
@@ -25,8 +30,10 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('prediagnostic/', prediag_view, name='prediagnostic'), #Quand un utilisateur va sur /prediagnostic, Django exécute la fonction prediagnostique_page
-    path('prediagnostic/check-siret/', check_siret, name="check_siret"),
     path('homepage/', homepage),
-    path('prediagnostic/formulaire/', questionnaire, name="questionnaire")
+    path('questionnaire/', questionnaire, name="questionnaire"),
+    path("api/questions/", api_questions, name="api_questions"),
+    path("api/check-siret/", check_siret, name="check_siret"),
+    path("save_contact/", save_contact, name="save_contact"),
+    path("save_answer/", save_answer, name="save_answer")
 ]

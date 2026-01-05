@@ -4,16 +4,17 @@ from .forms import *
 from .api import *
 from .models import *
 import json
+from datetime import datetime
+from django.db import IntegrityError
 
-def clean_siret(self):
-    siret = self.cleaned_data['siret']
-    if len(siret)!=14 or not siret.isdigit() :
-        raise forms.ValidationError("Le SIRET doit contenir 14 chiffres.")
-    
+
+#Sert à : - récupérer le SIRET 
+# -créer / mettre à jour le contact
+# -stocker contact_id en session   
 def prediag_view(request):
     if request.method == "POST" :
         siret = request.POST.get("siret")
-        contact = Contact.objects.filter(siret=siret).first()
+        contact = Contact.objects.filter(dossiers__entreprise__siret=siret).first()
         form = ClientForm(request.POST, instance=contact) 
         if form.is_valid():
             contact = form.save(commit=False)
@@ -72,21 +73,64 @@ def check_siret(request):
                 unite.get("prenom3UniteLegale") or "",
                 unite.get("prenom4UniteLegale") or ""
             ])
-        }
-    Contact.objects.update_or_create(
-        siret= entreprise_info["siret"],
-         
-         defaults={
-        "date_creation": entreprise_info["date_creation"],
-        "statut_admin": entreprise_info["statut_admin"],
-        "nom_officiel": entreprise_info["nom_officiel"],
-        "autres_noms": entreprise_info["autres_noms"],
-        "prenom_dirigeant": entreprise_info["prenom_dirigeant"],
-    }
-    )
-    
+        }    
     return JsonResponse({"found": True, "data": entreprise_info})
 
+def save_contact(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            date_creation = data.get("date_creation")
+
+            if Contact.objects.filter(email=data["email"]).exists():
+                return JsonResponse(
+                    {"error": "Cet email a déjà été utilisé pour un dossier"},
+                    status=400
+                )
+            
+            return JsonResponse({"success": True})
+
+        except IntegrityError:
+            return JsonResponse(
+                {"error": "Cet email existe déjà"},
+                status=400
+            )
+        
+    if date_creation:
+        date_creation = datetime.strptime(date_creation, "%Y-%m-%d").date()
+        entreprise, _ = Entreprise.objects.update_or_create(
+            siret=data["siret"],
+            defaults={
+                "nom_officiel": data.get("nom_officiel"),
+                "date_creation": date_creation,
+                "statut_admin": data.get("statut_admin"),
+                "autres_noms": data.get("autres_noms"),
+                "prenom_dirigeant": data.get("prenom_dirigeant"),
+            }
+        )
+
+        contact, _ = Contact.objects.update_or_create(
+            email=data["email"],
+            defaults={
+                "nom": data["nom"],
+                "telephone": data["telephone"],
+                "adresse": data["adresse"],
+                "ville": data["ville"],
+                "code_postal": data["code_postal"],
+            }
+        )
+
+        dossier, _ = Dossiers.objects.get_or_create(
+            contact=contact,
+            entreprise=entreprise,
+            type_dossier="QUALIBAT"
+        )
+
+        request.session["contact_id"] = contact.id
+        request.session["entreprise_id"] = entreprise.id
+        request.session["dossier_id"] = dossier.id
+
+        return JsonResponse({"success": True})
 
     
 def prediagnostique_page(request):
@@ -96,48 +140,6 @@ def prediagnostique_page(request):
 def homepage(request):
     return render(request, "home.html" )
 
-def formulaire_client(request):
-    siret = None 
-    # Vérifie si le formulaire a été soumis en méthode POST
-    if request.method == "POST":
-        # Récupère le SIRET envoyé dans le formulaire
-        siret = request.POST.get('siret')
-    
-    # Si un SIRET a été fourni, on cherche le client correspondant en base
-    if siret:
-        # filter() renvoie un QuerySet, .first() permet de récupérer le premier objet ou None
-        contact = Contact.objects.filter(siret=siret).first()
-    else:
-        # Aucun SIRET fourni → pas de client existant
-        contact = None
-
-    # Crée un formulaire Django avec les données POST
-    # Si client existe, on va mettre à jour ce client (instance=client)
-    # Sinon, on créera un nouveau client à l'enregistrement
-    form = ClientForm(request.POST, instance=contact)
-
-    # Vérifie si les données du formulaire sont valides
-    if form.is_valid():
-        # Enregistre le client en base (nouveau ou mise à jour)
-        form.save()
-    else:
-        # Si les données ne sont pas valides, réinitialise le formulaire vide
-        form = ClientForm()
-
-    # Affiche le template 'prediagnostic.html' avec le formulaire (mis à jour ou vide)
-    return render(request, "prediagnostic.html", {"form": form})
-def start_diag(request, contact_id):
-
-    contact = Contact.objects.get(id=contact_id)
-    dossier_client = Dossiers.objects.create(
-        contact = contact,
-        type_dossier = '',
-        statut = 'en_attente',)
-    
-    return redirect(request, "prediagnostic.html", dossier_client = dossier_client.id, question_number =1 ) 
-    
-def questionnaire_page(request):
-    return render(request, "questionnaire_eligibilite.html")
 
 def questionnaire(request):
     # On récupère toutes les questions en base
@@ -151,7 +153,7 @@ def questionnaire(request):
             for question_id, reponse in form.cleaned_data.items():
                 # On récupère la question correspondante
                 question = Question.objects.get(id=question_id)
-                contact = Contact.objects.get(id=request.session.get("client_id"))
+                contact = Contact.objects.get(id=request.session.get("contact_id"))
 
                 Reponse.objects.create(
                     contact = contact,
@@ -162,7 +164,43 @@ def questionnaire(request):
                 
             return redirect("success")
                 
-    
-    form = QuestionnaireForm(questions=questions)
-    return render(request, "questionnaire_eligibilite.html", {"form": form})
+    else:
+        form = QuestionnaireForm(questions=questions)
+        return render(request, "questionnaire_eligibilite.html", {"form": form})
 
+def api_questions(request):
+    questions = Question.objects.all()
+    data = []
+
+    for q in questions:
+        data.append({
+            "id": q.id,
+            "code": q.code,
+            "text": q.texte_question,
+            "type": q.type,           # single / multiple
+            "options": q.choices      # JSON list directement
+        })
+
+    return JsonResponse({"questions": data})
+
+def save_answer(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        contact_id = request.session.get("contact_id")
+        if not contact_id:
+            return JsonResponse({"error":"Contact non trouvé en session"}, status=400)
+
+        contact = Contact.objects.get(id=contact_id)
+        question = Question.objects.get(id=data["question_id"])
+
+        # On récupère le dossier
+        dossier = Dossiers.objects.filter(contact=contact).first()
+
+        Reponse.objects.create(
+            dossier=dossier,
+            contact=contact,
+            question=question,
+            reponse_user=data["answer"]
+        )
+        return JsonResponse({"success": True})
+    return JsonResponse({"error":"Invalid request"}, status=400)

@@ -1,10 +1,11 @@
 from django.contrib import admin
-from .models import Contact, Dossiers, Documents, Prediagnostique, Question, Reponse
+from .models import Contact, Dossiers, Documents, Prediagnostique, Question, Reponse, Entreprise
 
 admin.site.register(Contact)
 admin.site.register(Dossiers)
 admin.site.register(Documents)
 admin.site.register(Prediagnostique)
+admin.site.register(Entreprise)
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
