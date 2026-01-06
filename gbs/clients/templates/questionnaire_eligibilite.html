@@ -39,7 +39,6 @@ body {
     line-height: 1.6;
 }
 
-/* Progress bar redesign - 6px height with subtle gradient */
 .progress-bar { 
     position: fixed;
     top: 0;
@@ -49,6 +48,13 @@ body {
     background: var(--neutral-200);
     z-index: 1000;
 }
+.button-group {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, var(--neutral-50) 80%, transparent);
+    padding-top: 1.5rem;
+}
+
 
 .progress-fill { 
     height: 100%;
@@ -72,7 +78,6 @@ body {
     max-width: 48rem;
 }
 
-/* Enhanced step transitions */
 .step { 
     display: none;
     opacity: 0;
@@ -86,7 +91,6 @@ body {
     transform: translateY(0);
 }
 
-/* Redesigned badge with gold accent */
 .step-badge { 
     display: inline-flex;
     align-items: center;
@@ -118,7 +122,6 @@ h1 {
     line-height: 1.5;
 }
 
-/* Input fields - 56px height, rounded-xl, gold focus */
 .input { 
     width: 100%;
     height: 56px;
@@ -149,7 +152,6 @@ h1 {
     margin-bottom: 1rem;
 }
 
-/* Primary button with gold background */
 .btn { 
     display: inline-flex;
     align-items: center;
@@ -187,7 +189,6 @@ h1 {
     box-shadow: none;
 }
 
-/* Pulse animation for SIRET verification button */
 @keyframes pulse {
     0%, 100% {
         box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
@@ -212,7 +213,6 @@ h1 {
     background: var(--neutral-50);
 }
 
-/* Option buttons as elegant cards with thick gold border on hover/selection */
 .btn-option { 
     width: 100%;
     min-height: 56px;
@@ -260,7 +260,6 @@ h1 {
     flex: 1;
 }
 
-/* Company info as business card with building icon */
 .company-info { 
     display: flex;
     align-items: center;
@@ -317,7 +316,6 @@ h1 {
     padding: 2rem 0;
 }
 
-/* Success icon with gold background */
 .success-icon { 
     display: inline-flex;
     align-items: center;
@@ -473,6 +471,9 @@ let currentStep = 0;
 let totalSteps = 0;
 let formData = { siret:'', entrepriseData:{}, contact:{}, answers:{} };
 
+// Stockage temporaire des sélections multiples
+let currentMultipleSelections = [];
+
 // -------------------- SIRET --------------------
 const siretInput = document.getElementById('siretInput');
 const verifyBtn = document.getElementById('verifySiretBtn');
@@ -489,6 +490,7 @@ verifyBtn.addEventListener('click', async () => {
         formData.entrepriseData = data.data;
         document.getElementById('companyName').textContent = data.data.nom_officiel;
         document.getElementById('companyInfo').style.display = 'flex';
+        await loadQuestions();
         nextStep();
     } catch(e) {
         document.getElementById('siretError').style.display='block';
@@ -496,6 +498,7 @@ verifyBtn.addEventListener('click', async () => {
         verifyBtn.disabled = false;
     }
 });
+
 async function loadQuestions() {
     const res = await fetch('/api/questions/');
     const data = await res.json();
@@ -506,31 +509,139 @@ async function loadQuestions() {
 
     questions.forEach((q, index) => {
         const stepIndex = index + 2;
-
         const div = document.createElement('div');
         div.className = 'step';
         div.dataset.step = stepIndex;
+        div.dataset.questionId = q.id;
+        div.dataset.questionType = q.type;
+
+        let optionsHTML = '';
+        
+        if (q.type === 'multiple') {
+            // Pour les choix multiples : boutons cliquables + bouton de validation
+            optionsHTML = `
+                <div class="checkbox-list">
+                    ${q.options.map((opt, i) => `
+                        <button class="btn-option" data-option-value="${opt}" onclick="toggleMultipleOption(${q.id}, '${opt.replace(/'/g, "\\'")}', this)">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-outline back-btn">Retour</button>
+                    <button type="button" class="btn btn-primary" onclick="submitMultipleAnswer(${q.id})" disabled id="validateBtn-${q.id}">
+                        Valider la sélection
+                    </button>
+                </div>
+            `;
+        } else {
+            // Pour les choix simples : clic direct
+            optionsHTML = `
+    <div class="checkbox-list">
+        ${q.options.map(opt => `
+            <button class="btn-option"
+                onclick="selectSingleOption(${q.id}, '${opt.replace(/'/g, "\\'")}', this)">
+                ${opt}
+            </button>
+        `).join('')}
+    </div>
+
+    <div class="button-group">
+        <button type="button" class="btn btn-outline back-btn">Retour</button>
+        <button type="button" class="btn btn-primary next-btn" disabled
+            onclick="submitSingleAndNext(${q.id})">
+            Suivant
+        </button>
+    </div>
+`;
+
+        }
 
         div.innerHTML = `
             <div class="step-badge">Étape ${stepIndex + 1} / <span class="totalSteps"></span></div>
             <h1>${q.text}</h1>
-            <div class="checkbox-list">
-                ${q.options.map(opt => `
-                    <button class="btn-option"
-                        onclick="submitAnswer(${q.id}, '${opt.replace(/'/g, "\\'")}')">
-                        ${opt}
-                    </button>
-                `).join('')}
-            </div>
+            ${q.type === 'multiple' ? '<p class="subtitle">Vous pouvez sélectionner plusieurs réponses</p>' : ''}
+            ${optionsHTML}
         `;
 
         container.appendChild(div);
-        
     });
 
     totalSteps = questions.length + 3;
     document.querySelectorAll('.totalSteps').forEach(el => el.innerText = totalSteps);
+    
 }
+
+// -------------------- GESTION CHOIX MULTIPLES --------------------
+function toggleMultipleOption(qid, value, button) {
+    const index = currentMultipleSelections.indexOf(value);
+    
+    if (index > -1) {
+        // Désélectionner
+        currentMultipleSelections.splice(index, 1);
+        button.classList.remove('selected');
+    } else {
+        // Sélectionner
+        currentMultipleSelections.push(value);
+        button.classList.add('selected');
+    }
+    
+    // Activer/désactiver le bouton de validation
+    const validateBtn = document.getElementById(`validateBtn-${qid}`);
+    validateBtn.disabled = currentMultipleSelections.length === 0;
+}
+
+async function submitMultipleAnswer(qid) {
+    if (currentMultipleSelections.length === 0) return;
+    
+    formData.answers[qid] = currentMultipleSelections;
+    
+    try {
+        await fetch('/save_answer/', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN},
+            body:JSON.stringify({question_id:qid, answer:currentMultipleSelections})
+        });
+    } catch(e) {
+        console.error(e);
+    }
+    
+    // Réinitialiser les sélections pour la prochaine question
+    currentMultipleSelections = [];
+    nextStep();
+}
+
+function selectSingleOption(qid, value, btn) {
+    formData.answers[qid] = value;
+
+    const container = btn.closest('.step');
+    container.querySelectorAll('.btn-option')
+        .forEach(b => b.classList.remove('selected'));
+
+    btn.classList.add('selected');
+    container.querySelector('.next-btn').disabled = false;
+}
+
+async function submitSingleAndNext(qid) {
+    const value = formData.answers[qid];
+    if (!value) return;
+
+    try {
+        await fetch('/save_answer/', {
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body:JSON.stringify({ question_id: qid, answer: value })
+        });
+    } catch(e) {
+        console.error(e);
+    }
+
+    nextStep();
+}
+
 
 // -------------------- CONTACT --------------------
 ['nom','email','telephone','adresse','ville','code_postal'].forEach(f=>{
@@ -539,8 +650,8 @@ async function loadQuestions() {
         document.querySelector('[data-step="1"] .next-btn').disabled = !Object.values(formData.contact).every(v=>v);
     });
 });
-document.querySelector('[data-step="1"] .next-btn')
-.addEventListener('click', async () => {
+
+document.querySelector('[data-step="1"] .next-btn').addEventListener('click', async () => {
     try {
         const res = await fetch('/save_contact/', {
             method: 'POST',
@@ -560,7 +671,6 @@ document.querySelector('[data-step="1"] .next-btn')
             throw new Error(err.error || 'Erreur sauvegarde contact');
         }
 
-        await loadQuestions();
         nextStep();
 
     } catch (e) {
@@ -569,31 +679,72 @@ document.querySelector('[data-step="1"] .next-btn')
     }
 });
 
-async function submitAnswer(qid,value){
+async function submitAnswer(qid, value) {
     formData.answers[qid] = value;
-    try{
+    try {
         await fetch('/save_answer/', {
             method:'POST',
             headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN},
             body:JSON.stringify({question_id:qid, answer:value})
         });
-    }catch(e){console.error(e);}
+    } catch(e) {
+        console.error(e);
+    }
     nextStep();
+}
+function getActiveStepIndex() {
+    const active = document.querySelector('.step.active');
+    if (!active) return 0;
+
+    const step = active.dataset.step;
+    return step === 'final' ? totalSteps - 1 : parseInt(step, 10);
 }
 
 // -------------------- NAV --------------------
-function showStep(stepNum){
-    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
-    const el = stepNum==='final'?document.querySelector('.step[data-step="final"]'):
+function showStep(stepNum) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    const el = stepNum === 'final' ? document.querySelector('.step[data-step="final"]') :
         document.querySelector(`.step[data-step="${stepNum}"]`);
-    if(el) el.classList.add('active');
+    if (el) el.classList.add('active');
+    
+    // Réinitialiser les sélections multiples lors du changement d'étape
+    currentMultipleSelections = [];
+    
     updateProgress();
 }
-function updateProgress(){ document.getElementById('progressBar').style.width=((currentStep+1)/totalSteps)*100+'%'; }
-function nextStep(){ currentStep++; showStep(currentStep===totalSteps-1?'final':currentStep); }
-function prevStep(){ if(currentStep>0){currentStep--; showStep(currentStep);} }
-document.querySelectorAll('.back-btn').forEach(b=>b.addEventListener('click',prevStep));
-document.getElementById('footerBackBtn').addEventListener('click',prevStep);
+
+function updateProgress() { 
+    document.getElementById('progressBar').style.width = ((currentStep + 1) / totalSteps) * 100 + '%'; 
+}
+
+function nextStep() { 
+    currentStep++; 
+    showStep(currentStep === totalSteps - 1 ? 'final' : currentStep); 
+}
+
+function prevStep() {
+    currentStep = getActiveStepIndex() - 1;
+
+    if (currentStep < 0) currentStep = 0;
+
+    showStep(currentStep);
+}
+
+
+document.getElementById('footerBackBtn').addEventListener('click', prevStep);
+formData.answers = {};
+
+// Gestion universelle du bouton Retour (dynamique + statique)
+document.addEventListener('click', (e) => {
+    const backBtn = e.target.closest('.back-btn');
+    if (!backBtn) return;
+
+    e.preventDefault();
+    prevStep();
+});
+
+
+
 
 </script>
 </body>

@@ -77,27 +77,22 @@ def check_siret(request):
     return JsonResponse({"found": True, "data": entreprise_info})
 
 def save_contact(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            date_creation = data.get("date_creation")
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
 
-            if Contact.objects.filter(email=data["email"]).exists():
-                return JsonResponse(
-                    {"error": "Cet email a déjà été utilisé pour un dossier"},
-                    status=400
-                )
-            
-            return JsonResponse({"success": True})
+    try:
+        data = json.loads(request.body)
+        date_creation = data.get("date_creation")
 
-        except IntegrityError:
+        if Contact.objects.filter(email=data["email"]).exists():
             return JsonResponse(
-                {"error": "Cet email existe déjà"},
+                {"error": "Cet email a déjà été utilisé pour un dossier"},
                 status=400
             )
-        
-    if date_creation:
-        date_creation = datetime.strptime(date_creation, "%Y-%m-%d").date()
+
+        if date_creation:
+            date_creation = datetime.strptime(date_creation, "%Y-%m-%d").date()
+
         entreprise, _ = Entreprise.objects.update_or_create(
             siret=data["siret"],
             defaults={
@@ -132,7 +127,11 @@ def save_contact(request):
 
         return JsonResponse({"success": True})
 
-    
+    except IntegrityError:
+        return JsonResponse({"error": "Conflit base de données"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
 def prediagnostique_page(request):
     form = ClientForm()
     return render(request, "prediagnostic.html", {"form": form})
