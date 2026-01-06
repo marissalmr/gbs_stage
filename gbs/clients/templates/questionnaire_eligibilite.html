@@ -8,6 +8,26 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+    .answer-recap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    margin-bottom: 1.5rem;
+    background: var(--gold-light);
+    border: 1px solid var(--gold);
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--anthracite);
+}
+
+.answer-recap::before {
+    content: "✓";
+    font-weight: 700;
+    color: var(--gold);
+}
+
 :root {
     --gold: #D4AF37;
     --gold-light: rgba(212, 175, 55, 0.08);
@@ -466,7 +486,15 @@ footer {
 
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
+let subcontractingAnswer = null; // 'oui' | 'non'
 let questions = [];
+// Mapping logique des questions conditionnelles
+const QUESTION_CODES = {
+    Q2: null,
+    Q3: null,
+    Q4: null
+};
+
 let currentStep = 0;
 let totalSteps = 0;
 let formData = { siret:'', entrepriseData:{}, contact:{}, answers:{} };
@@ -500,7 +528,11 @@ verifyBtn.addEventListener('click', async () => {
 });
 
 async function loadQuestions() {
+    
+    
     const res = await fetch('/api/questions/');
+    const text = await res.text();
+
     const data = await res.json();
     questions = data.questions;
 
@@ -514,6 +546,7 @@ async function loadQuestions() {
         div.dataset.step = stepIndex;
         div.dataset.questionId = q.id;
         div.dataset.questionType = q.type;
+
 
         let optionsHTML = '';
         
@@ -555,7 +588,10 @@ async function loadQuestions() {
     </div>
 `;
 
+
         }
+       
+
 
         div.innerHTML = `
             <div class="step-badge">Étape ${stepIndex + 1} / <span class="totalSteps"></span></div>
@@ -566,6 +602,11 @@ async function loadQuestions() {
 
         container.appendChild(div);
     });
+    questions.forEach((q, index) => {
+    if (q.code === 'Q2') QUESTION_CODES.Q2 = index + 2;
+    if (q.code === 'Q3') QUESTION_CODES.Q3 = index + 2;
+    if (q.code === 'Q4') QUESTION_CODES.Q4 = index + 2;
+});
 
     totalSteps = questions.length + 3;
     document.querySelectorAll('.totalSteps').forEach(el => el.innerText = totalSteps);
@@ -639,6 +680,30 @@ async function submitSingleAndNext(qid) {
         console.error(e);
     }
 
+    const step = getActiveStepIndex();
+
+    // ----- Q2 : Sous-traitance -----
+    if (step === QUESTION_CODES.Q2) {
+        subcontractingAnswer = value; // on mémorise le chemin
+
+        if (value === 'oui') {
+            currentStep = QUESTION_CODES.Q3;
+        } else {
+            currentStep = QUESTION_CODES.Q4;
+        }
+
+        showStep(currentStep);
+        return;
+    }
+
+    // ----- Q3 : % sous-traitance -----
+    if (step === QUESTION_CODES.Q3) {
+        // Après Q3, on saute DIRECTEMENT à la suite logique (Q5)
+        currentStep = QUESTION_CODES.Q4 + 1;
+        showStep(currentStep);
+        return;
+    }
+
     nextStep();
 }
 
@@ -703,15 +768,28 @@ function getActiveStepIndex() {
 // -------------------- NAV --------------------
 function showStep(stepNum) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-    const el = stepNum === 'final' ? document.querySelector('.step[data-step="final"]') :
-        document.querySelector(`.step[data-step="${stepNum}"]`);
-    if (el) el.classList.add('active');
-    
-    // Réinitialiser les sélections multiples lors du changement d'étape
+
+    const el = stepNum === 'final'
+        ? document.querySelector('.step[data-step="final"]')
+        : document.querySelector(`.step[data-step="${stepNum}"]`);
+
+    if (!el) return;
+
+    // Supprimer ancien recap si présent
+    const oldRecap = el.querySelector('.answer-recap');
+    if (oldRecap) oldRecap.remove();
+
+    // Injecter recap si réponse existante
+    const recapHTML = getAnswerRecap(el);
+    if (recapHTML) {
+        el.insertAdjacentHTML('afterbegin', recapHTML);
+    }
+
+    el.classList.add('active');
     currentMultipleSelections = [];
-    
     updateProgress();
 }
+
 
 function updateProgress() { 
     document.getElementById('progressBar').style.width = ((currentStep + 1) / totalSteps) * 100 + '%'; 
@@ -723,18 +801,32 @@ function nextStep() {
 }
 
 function prevStep() {
-    currentStep = getActiveStepIndex() - 1;
+    const step = getActiveStepIndex();
 
+    // ----- Retour depuis Q4 (CA) -----
+    if (step === QUESTION_CODES.Q4) {
+        if (subcontractingAnswer === 'non') {
+            currentStep = QUESTION_CODES.Q2;
+        } else {
+            currentStep = QUESTION_CODES.Q3;
+        }
+        showStep(currentStep);
+        return;
+    }
+
+    // ----- Retour depuis Q3 (% sous-traitance) -----
+    if (step === QUESTION_CODES.Q3) {
+        currentStep = QUESTION_CODES.Q2;
+        showStep(currentStep);
+        return;
+    }
+
+    currentStep = step - 1;
     if (currentStep < 0) currentStep = 0;
 
     showStep(currentStep);
 }
 
-
-document.getElementById('footerBackBtn').addEventListener('click', prevStep);
-formData.answers = {};
-
-// Gestion universelle du bouton Retour (dynamique + statique)
 document.addEventListener('click', (e) => {
     const backBtn = e.target.closest('.back-btn');
     if (!backBtn) return;
@@ -742,6 +834,24 @@ document.addEventListener('click', (e) => {
     e.preventDefault();
     prevStep();
 });
+
+function getAnswerRecap(stepEl) {
+    const qid = stepEl.dataset.questionId;
+    if (!qid) return '';
+
+    const answer = formData.answers[qid];
+    if (!answer) return '';
+
+    const text = Array.isArray(answer)
+        ? answer.join(', ')
+        : answer;
+
+    return `
+        <div class="answer-recap">
+            Vous avez répondu : <strong>${text}</strong>
+        </div>
+    `;
+}
 
 
 
