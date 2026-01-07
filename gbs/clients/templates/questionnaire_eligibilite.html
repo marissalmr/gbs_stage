@@ -376,6 +376,206 @@ footer {
     gap: 1rem;
 }
 
+.final-recap-doc {
+    background: #FDFCFB;
+    padding: 4rem 3rem;
+    position: relative;
+}
+
+.final-recap-doc::after {
+    content: "GBS";
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    font-size: 6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(0,0,0,0.03);
+    pointer-events: none;
+}
+
+.recap-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.recap-header h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1C1C1C;
+    margin-bottom: 1rem;
+}
+
+.recap-header .gold-line {
+    width: 60px;
+    height: 2px;
+    background: var(--gold);
+    margin: 0 auto;
+}
+
+.recap-timeline {
+    position: relative;
+    padding-left: 3rem;
+}
+
+.recap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--gold);
+    opacity: 0.6;
+}
+
+.recap-entry {
+    position: relative;
+    margin-bottom: 3rem;
+}
+
+.recap-entry:last-child {
+    margin-bottom: 0;
+}
+
+.recap-entry::before {
+    content: '';
+    position: absolute;
+    left: -3px;
+    top: 0.35rem;
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+}
+
+.recap-question {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2E2E2E;
+    margin-bottom: 0.4rem;
+}
+
+.recap-answer {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #000000;
+}
+
+.final-recap-actions {
+    margin-top: 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.final-recap-actions .edit-link {
+    background: none;
+    border: none;
+    font-size: 0.95rem;
+    color: #2E2E2E;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.final-recap-actions .edit-link::before {
+    content: "← ";
+}
+/* ===============================
+   FINAL RECAP — FICHE D’AUDIT
+=============================== */
+
+body {
+    background: #FAFAFA;
+}
+
+.final-recap-doc {
+    background: #FFFFFF;
+    padding: 4rem 3rem;
+    max-width: 48rem;
+    margin: 0 auto;
+}
+
+.recap-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.recap-header h2 {
+    font-family: "Times New Roman", Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--anthracite);
+}
+
+.recap-header .gold-line {
+    width: 48px;
+    height: 1px;
+    background: var(--gold);
+    margin: 1rem auto 0;
+}
+
+.recap-audit {
+    position: relative;
+    padding-left: 2.5rem;
+}
+
+.recap-audit::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--gold);
+}
+
+.recap-item {
+    margin-bottom: 2.5rem;
+}
+
+.recap-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 0.35rem;
+}
+
+.recap-value {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #000;
+}
+
+.final-recap-actions {
+    margin-top: 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.final-recap-actions .btn-outline {
+    background: transparent;
+    border: 1px solid var(--neutral-300);
+    color: var(--anthracite);
+}
+
+.final-recap-actions .btn-primary {
+    background: var(--gold);
+    color: var(--anthracite);
+    min-width: 220px;
+    box-shadow: 0 6px 20px rgba(212,175,55,0.35);
+}
+
+
+
+
+
+
+
+
 @media (min-width: 768px) { 
     .input-grid { 
         grid-template-columns: 1fr 1fr;
@@ -398,6 +598,11 @@ footer {
     .main-content {
         padding: 2rem 1rem;
     }
+
+ 
+
+
+
 }
 </style>
 </head>
@@ -449,15 +654,9 @@ footer {
 <div class="step" data-step="final-recap">
     <div class="step-badge">Récapitulatif</div>
 
-    <h1>Vérifiez vos informations</h1>
+   <div id="finalRecapContainer"></div>
 
-    <div id="finalRecapContainer"></div>
-
-    <div class="button-group">
-        <button class="btn btn-outline" onclick="goToEdit()">Modifier</button>
-        <button class="btn btn-primary" onclick="submitFinal()">Confirmer et envoyer</button>
     </div>
-</div>
 
 <!-- Final Step -->
 <div class="step" data-step="final">
@@ -483,6 +682,8 @@ footer {
 const CSRF_TOKEN = '{{ csrf_token }}';
 let subcontractingAnswer = null; // 'oui' | 'non'
 let questions = [];
+let lastQuestionStep = null;
+
 // Mapping logique des questions conditionnelles
 const QUESTION_CODES = {
     Q2: null,
@@ -844,30 +1045,46 @@ document.addEventListener('click', (e) => {
 });
 
 function buildFinalRecap() {
-    let html = '<div class="answer-recap" style="flex-direction:column; align-items:flex-start;">';
+    let html = `
+        <section class="final-recap-doc">
+            <header class="recap-header">
+                <h2>Synthèse de votre éligibilité</h2>
+                <div class="gold-line"></div>
+            </header>
 
-    html += `<h3>Vos réponses</h3>`;
+            <div class="recap-audit">
+    `;
 
     Object.entries(formData.answers).forEach(([qid, answer]) => {
         const q = questions.find(q => q.id == qid);
         if (!q) return;
 
         const value = Array.isArray(answer) ? answer.join(', ') : answer;
+
         html += `
-            <p style="margin-bottom:1rem;">
-                <strong>${q.text}</strong><br>
-                ${value}
-            </p>
+            <div class="recap-item">
+                <div class="recap-label">${q.text}</div>
+                <div class="recap-value">${value}</div>
+            </div>
         `;
     });
 
-    html += '</div>';
+    html += `
+            </div>
+
+            <div class="final-recap-actions">
+                <button class="btn btn-outline" onclick="goToEdit()">Modifier</button>
+                <button class="btn btn-primary" onclick="submitFinal()">Confirmer et envoyer</button>
+            </div>
+        </section>
+    `;
+
     return html;
 }
 
 
-
 function showFinalRecap() {
+    lastQuestionStep = getActiveStepIndex();
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
 
     const recapStep = document.querySelector('[data-step="final-recap"]');
@@ -878,12 +1095,51 @@ function showFinalRecap() {
 
 
 function goToEdit() {
-    showStep(QUESTION_CODES.Q2); // ou la première question
+    if (lastQuestionStep !== null) {
+        currentStep = lastQuestionStep;
+        showStep(currentStep);
+    }
 }
-function submitFinal() {
-    // ICI seulement tu sauvegardes / envoies
-    sendDataToAPI(formData);
+
+
+
+async function submitFinal() {
+    try {
+        // Optionnel : feedback visuel
+        const btn = document.querySelector('.final-recap-actions .btn-primary');
+        btn.disabled = true;
+        btn.innerHTML = 'Envoi en cours…';
+
+        const res = await fetch('/submit_final/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Erreur lors de l’envoi');
+        }
+
+        // 👉 succès → écran final
+        currentStep = totalSteps - 1;
+        showStep('final');
+
+    } catch (e) {
+        alert(e.message);
+        console.error(e);
+
+        const btn = document.querySelector('.final-recap-actions .btn-primary');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Confirmer et envoyer';
+        }
+    }
 }
+
 
 
 

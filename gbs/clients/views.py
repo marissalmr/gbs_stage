@@ -203,3 +203,23 @@ def save_answer(request):
         )
         return JsonResponse({"success": True})
     return JsonResponse({"error":"Invalid request"}, status=400)
+
+def submit_final(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+
+        # 👉 ici tu as TOUT :
+        # data["siret"]
+        # data["entrepriseData"]
+        # data["contact"]
+        # data["answers"]
+
+        # TODO : sauvegarde DB / CRM / email / webhook
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
