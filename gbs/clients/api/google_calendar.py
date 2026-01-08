@@ -46,3 +46,19 @@ def create_event(titre,description, start_rdv, duration_minutes=60):
     #Appelle Google Calendar API, insère l’événement, le bloque 
     return created_event
 
+#Fonction qui va vérifier si un créneau est libre
+def is_available(start_rdv, duration_minutes=60):
+    service = get_calendar_service()
+    end_rdv = start_rdv + timedelta(minutes=duration_minutes)
+    events = service.events().list(  #demande à google calendar tous les events entre start_rdv et fin_rdv
+        calendarId=settings.GOOGLE_CALENDAR_ID, 
+        #On regarde dans le calendrier du tuteur
+        timeMin=start_rdv.isoformat() + "Z", #Convertir l'heure en UTC
+        timeMax=end_rdv.isoformat() + "Z",
+        singleEvents=True
+    ).execute() #Envoie la requete à Google et récupere les events
+
+    return len(events.get("items", [])) == 0 #liste des événements trouvés dans ce créneau.
+                                            # Si la liste est vide le créneau est libre, on renvoie True.
+
+
