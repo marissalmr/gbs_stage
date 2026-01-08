@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from .forms import *
-from .api import *
+from .api.insee import verify_siret
 from .models import *
 import json
 from datetime import datetime
