@@ -13,17 +13,27 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv() # lit le .env et place les variables dans os.environ
 API_CLIENT_ID = os.getenv("API_CLIENT_ID") # récupère le secret et le met dans une variable Django.
 API_CLIENT_SECRET = os.getenv("API_CLIENT_SECRET")
 
+if not API_CLIENT_ID or not API_CLIENT_SECRET:
+    raise RuntimeError("INSEE API credentials manquants")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-GOOGLE_SERVICE_ACCOUNT_FILE = BASE_DIR / "credentials" / "prise-de-rendez-vous-gbs-92ad6845bed1.json"
+GOOGLE_SERVICE_ACCOUNT_FILE = os.path.join(
+    BASE_DIR.parent,  # <- remonte d’un niveau
+    "credentials",
+    "prise-de-rendez-vous-gbs-92ad6845bed1.json"
+)
 GOOGLE_CALENDAR_ID = "primary"
+
+# (optionnel mais pro)
+if not os.path.exists(GOOGLE_SERVICE_ACCOUNT_FILE):
+    raise RuntimeError("Fichier Google Service Account introuvable")
 
 
 # Quick-start development settings - unsuitable for production
