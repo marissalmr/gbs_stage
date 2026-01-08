@@ -21,12 +21,8 @@ def test_google_auth():
     service = get_calendar_service()
     return service is not None
 
-def create_event(
-    titre,
-    description,
-    start_rdv,
-    duration_minutes=60
-    ):
+def create_event(titre,description, start_rdv, duration_minutes=60):
+
     service = get_calendar_service() 
     #On récupère le client Google, Authentifié, Prêt à parler à l’API
     end_rdv = start_rdv + timedelta(minutes=duration_minutes)

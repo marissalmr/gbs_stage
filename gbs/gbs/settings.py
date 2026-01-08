@@ -29,11 +29,12 @@ GOOGLE_SERVICE_ACCOUNT_FILE = os.path.join(
     "credentials",
     "prise-de-rendez-vous-gbs-92ad6845bed1.json"
 )
-GOOGLE_CALENDAR_ID = "primary"
 
 # (optionnel mais pro)
 if not os.path.exists(GOOGLE_SERVICE_ACCOUNT_FILE):
     raise RuntimeError("Fichier Google Service Account introuvable")
+
+GOOGLE_CALENDAR_ID = "marielnrtstu@gmail.com"
 
 
 # Quick-start development settings - unsuitable for production
