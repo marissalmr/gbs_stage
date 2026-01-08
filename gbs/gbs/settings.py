@@ -21,6 +21,11 @@ API_CLIENT_SECRET = os.getenv("API_CLIENT_SECRET")
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+GOOGLE_SERVICE_ACCOUNT_FILE = BASE_DIR / "credentials" / "prise-de-rendez-vous-gbs-92ad6845bed1.json"
+GOOGLE_CALENDAR_ID = "primary"
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -128,5 +133,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-print("API_CLIENT_ID =", API_CLIENT_ID)
-print("API_CLIENT_SECRET =", API_CLIENT_SECRET)
+
