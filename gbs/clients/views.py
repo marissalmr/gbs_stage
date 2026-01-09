@@ -10,6 +10,7 @@ from clients.api.google_calendar import (
     is_available,
     create_event
 )
+from clients.api.google_calendar import show_if_rdv_available
 
 
 
@@ -215,14 +216,10 @@ def submit_final(request):
 
     try:
         data = json.loads(request.body)
-
-        # 👉 ici tu as TOUT :
         # data["siret"]
         # data["entrepriseData"]
         # data["contact"]
         # data["answers"]
-
-        # TODO : sauvegarde DB / CRM / email / webhook
 
         return JsonResponse({"success": True})
 
@@ -254,3 +251,26 @@ def book_appointement(request):
         "event_id": create_event.get("id"),
         "start": start_rdv.isoformat()
     }, status=201)
+
+
+def get_booked_times_for_day(request):
+    """
+    API endpoint Django pour retourner les créneaux horaires déjà réservés 
+    Utilisé côté frontend pour griser les créneaux indisponibles.
+    """
+
+    #Récupère la date depuis les paramètres GET 
+    date_str = request.GET.get("date")  
+
+    #Si pas de date fournie → on renvoie une erreur 400
+    if not date_str:
+        return JsonResponse({"error": "Date manquante"}, status=400)
+
+    #Convertit la date string en objet datetime.date
+    date = datetime.fromisoformat(date_str).date()
+
+    #Appelle la fonction backend pour récupérer les heures déjà réservées
+    available_or_not = show_if_rdv_available(date)
+
+    #Renvoie la liste des créneaux sous forme JSON au frontend
+    return JsonResponse({"reserved": available_or_not})

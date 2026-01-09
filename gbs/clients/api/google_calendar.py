@@ -81,7 +81,7 @@ def show_if_rdv_available(date):
         if start:
             dt = datetime.fromisoformat(start.replace("Z", ""))
             heure_reserver.append(dt.strftime("%H:%M"))
-            return heure_reserver
+    return heure_reserver
 
 
 
