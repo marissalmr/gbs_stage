@@ -7,6 +7,7 @@ from clients.views import save_answer
 from clients.views import save_contact
 from clients.views import submit_final
 from clients.views import book_appointement
+from clients.views import get_booked_times_for_day
 
 
 
@@ -40,6 +41,7 @@ urlpatterns = [
     path("save_contact/", save_contact, name="save_contact"),
     path("save_answer/", save_answer, name="save_answer"),
     path("submit_final/", submit_final, name="submit_final"),
-    path("book_appointment/", book_appointement, name="book_appointment")
+    path("book_appointment/", book_appointement, name="book_appointment"),
+    path("get_booked_times_for_day/", get_booked_times_for_day, name="get_booked_times_for_day")
 
 ]

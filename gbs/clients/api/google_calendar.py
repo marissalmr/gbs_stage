@@ -2,6 +2,7 @@ from google.oauth2 import service_account  #Gère l’authentification service a
 from googleapiclient.discovery import build
 from django.conf import settings
 from datetime import datetime, timedelta #timedelta permet d'ajouter h+1
+import pytz
 
 
 SCOPES =  ["https://www.googleapis.com/auth/calendar.events"]
@@ -49,6 +50,8 @@ def create_event(titre,description, start_rdv, duration_minutes=60):
 #Fonction qui va vérifier si un créneau est libre
 def is_available(start_rdv, duration_minutes=60):
     service = get_calendar_service()
+    tz = pytz.timezone("Europe/Paris")
+    start_rdv = tz.localize(start_rdv) if start_rdv.tzinfo is None else start_rdv
     end_rdv = start_rdv + timedelta(minutes=duration_minutes)
     events = service.events().list(  #demande à google calendar tous les events entre start_rdv et fin_rdv
         calendarId=settings.GOOGLE_CALENDAR_ID, 
@@ -63,9 +66,11 @@ def is_available(start_rdv, duration_minutes=60):
 
 
 def show_if_rdv_available(date):
+    
     service = get_calendar_service()
+    tz = pytz.timezone("Europe/Paris")
 
-    start_day = datetime.combine(date, datetime.min.time())
+    start_day = tz.localize(datetime.combine(date, datetime.min.time()))
     end_day = start_day + timedelta(days=1)
     #Plage analysée : [ 10/01 00:00  →  11/01 00:00 ]
 
@@ -79,8 +84,10 @@ def show_if_rdv_available(date):
     for evenements in events.get("items", []): #Items = liste évenements google
         start = evenements.get("start",{}).get("dateTime") #Récup heure début évenements
         if start:
-            dt = datetime.fromisoformat(start.replace("Z", ""))
+            dt = datetime.fromisoformat(start.replace("Z","+00:00"))  # force UTC
+            dt = dt.astimezone(tz)         # converti en Paris
             heure_reserver.append(dt.strftime("%H:%M"))
+    
     return heure_reserver
 
 

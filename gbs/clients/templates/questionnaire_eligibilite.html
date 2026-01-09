@@ -1437,9 +1437,11 @@ async function generateTimeSlots() {
 
     const dateStr = selectedDate.toISOString().split('T')[0];
 
-    const reserved = await fetch(`/get_reserved_slots/?date=${dateStr}`)
+    const data = await fetch(`/get_booked_times_for_day/?date=${dateStr}`)
         .then(res => res.json())
-        .catch(() => []);
+        .catch(() => ({ reserved: [] }));
+    const reserved = data.reserved
+    console.log('Reserved slots:', reserved);
 
     slots.forEach(time => {
         const pill = document.createElement('div');
