@@ -482,6 +482,31 @@ footer {
 .final-recap-actions .edit-link::before {
     content: "← ";
 }
+
+/* Réduit l’espace entre le message succès et le calendrier */
+.rdv-wrapper {
+    margin-top: 2rem; /* moins que 4rem */
+    padding: 2.5rem;
+}
+
+/* Mois centré et typographie fine */
+#calendarMonth {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+/* Grille 5 jours au lieu de 7 */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem;
+    justify-items: center; /* centre les jours */
+    margin-bottom: 1rem;
+}
+
+
 /* ===============================
    FINAL RECAP — FICHE D’AUDIT
 =============================== */
@@ -604,6 +629,121 @@ body {
 
 
 }
+
+/* ===============================
+   RDV HIGH-END UX
+=============================== */
+
+.serif-title {
+    font-family: "Times New Roman", Georgia, serif;
+    font-weight: 600;
+}
+
+.success-icon.refined {
+    border-width: 1.5px;
+    font-size: 2.2rem;
+}
+
+.rdv-wrapper {
+    margin-top: 4rem;
+    padding: 3rem;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(14px);
+    border-radius: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: all 0.4s ease-in-out;
+}
+
+.rdv-wrapper.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.rdv-helper {
+    font-size: 0.95rem;
+    color: var(--neutral-600);
+    margin-bottom: 2.5rem;
+}
+
+
+
+.calendar-day {
+    padding: 0.75rem 0;
+    text-align: center;
+    border-radius: 0.75rem;
+    border: 1px solid var(--neutral-200);
+    width: 100%;
+    max-width: 60px; /* taille uniforme */
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.calendar-day:hover {
+    border-color: var(--gold);
+    background: var(--gold-light);
+}
+
+.calendar-day.disabled {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.calendar-day.selected {
+    background: var(--gold);
+    color: var(--anthracite);
+    font-weight: 600;
+}
+
+.time-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.time-slot {
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.4s ease-in-out;
+}
+
+.time-slot:hover {
+    background: var(--gold-light);
+}
+
+.time-slot.selected {
+    background: var(--gold);
+    color: var(--anthracite);
+}
+#calendarMonth {
+    margin-bottom: 0.5rem; /* réduit l’espace entre le mois et la grille */
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem; /* réduire l’espace entre les jours */
+    margin-bottom: 1rem;
+}
+
+.calendar-day.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none; /* rend le jour non cliquable */
+}
+
+.time-slot.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 </style>
 </head>
 <body>
@@ -658,15 +798,59 @@ body {
 
     </div>
 
-<!-- Final Step -->
+
+   <!-- Step final -->
 <div class="step" data-step="final">
+
     <div class="final-content">
-        <div class="success-icon">✓</div>
-        <h1>Merci pour vos réponses !</h1>
-        <p class="subtitle">Votre dossier est en cours d'analyse. Un conseiller GBS vous contactera sous 48h.</p>
-        <button type="button" class="btn btn-primary" onclick="window.location.reload()">Nouvelle demande</button>
+
+        <!-- Phase 1 : Success -->
+        <div class="success-icon refined">✓</div>
+
+        <h1 class="serif-title">Merci pour vos réponses</h1>
+
+        <p class="subtitle">
+            Votre dossier est en cours d’analyse.<br>
+            Programmez maintenant votre diagnostic personnalisé.
+        </p>
+
+        <button type="button" class="btn btn-primary" id="bookRdvBtn">
+            Prendre rendez-vous
+        </button>
+
+        <!-- Phase 2 : RDV -->
+        <div class="rdv-wrapper" id="rdvWrapper">
+
+            <p class="rdv-helper">
+                Sélectionnez le créneau de votre diagnostic gratuit avec notre expert
+            </p>
+
+            <div class="calendar-wrapper">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <button id="prevDay" class="btn btn-outline">←</button>
+        <div id="calendarMonth" class="serif-title" style="text-align:center;"></div>
+        <button id="nextDay" class="btn btn-outline">→</button>
     </div>
+
+    <div class="calendar-grid" id="calendarDays"></div>
 </div>
+
+
+
+            </div>
+
+            <div class="time-slots" id="timeSlots"></div>
+
+            <button class="btn btn-primary" id="confirmRdvBtn" disabled>
+                Confirmer le rendez-vous
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 </div>
 </main>
@@ -1141,6 +1325,141 @@ async function submitFinal() {
 }
 
 
+
+// ===============================
+// RDV UX FLOW
+// ===============================
+const rdvWrapper = document.getElementById('rdvWrapper');
+let startOffset = 1; // jour de départ affiché (1 = demain)
+const daysToShow = 7;
+
+const calendarDays = document.getElementById('calendarDays');
+const calendarMonth = document.getElementById('calendarMonth');
+const timeSlots = document.getElementById('timeSlots');
+const confirmRdvBtn = document.getElementById('confirmRdvBtn');
+
+let startDate = new Date();
+startDate.setDate(startDate.getDate() + 1); // Commence demain
+let selectedDate = null;
+let selectedTime = null;
+
+document.getElementById('prevDay').addEventListener('click', () => {
+    startDate = addBusinessDays(startDate, -5);
+    generateCalendar();
+});
+
+// Transition bouton → calendrier
+document.getElementById('bookRdvBtn').addEventListener('click', () => {
+    document.getElementById('bookRdvBtn').style.opacity = '0';
+    document.getElementById('bookRdvBtn').style.pointerEvents = 'none';
+
+    setTimeout(() => rdvWrapper.classList.add('active'), 400);
+    generateCalendar();
+});
+
+// Génération jours (7 prochains jours)
+function addBusinessDays(date, days) {
+    const newDate = new Date(date);
+    let added = 0;
+    const step = days > 0 ? 1 : -1;
+
+    while (added < Math.abs(days)) {
+        newDate.setDate(newDate.getDate() + step);
+        const day = newDate.getDay();
+        if (day !== 0 && day !== 6) added++; // skip Dimanche & Samedi
+    }
+
+    return newDate;
+}
+
+
+
+document.getElementById('nextDay').addEventListener('click', () => {
+    startDate = addBusinessDays(startDate, 5);
+    generateCalendar();
+});
+// Fonction pour générer le calendrier
+function generateCalendar() {
+    calendarDays.innerHTML = '';
+
+    const days = [];
+    let tempDate = new Date(startDate);
+
+    // Trouver le lundi de la semaine de tempDate
+    const dayOfWeek = tempDate.getDay(); // 0 = Dimanche, 1 = Lundi ...
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Si dim, recule 6 jours
+    tempDate.setDate(tempDate.getDate() + diffToMonday);
+
+    // Génère les 5 jours de la semaine (Lun-Ven)
+    for (let i = 0; i < 5; i++) {
+        const day = new Date(tempDate);
+        day.setDate(tempDate.getDate() + i);
+        days.push(day);
+    }
+
+    // Affiche le mois/année du lundi
+    calendarMonth.textContent = days[0].toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+    days.forEach(dayDate => {
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        div.innerHTML = `<small>${dayDate.toLocaleDateString('fr-FR', { weekday: 'short' })}</small><br><strong>${dayDate.getDate()}</strong>`;
+        const today = new Date()
+        today.setHours(0,0,0,0)
+        // Désactive les jours passés
+        if (dayDate < today) div.classList.add('disabled');
+        else {
+            div.addEventListener('click', () => {
+                document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedDate = dayDate;
+                generateTimeSlots();
+            });
+
+            
+        }
+     
+
+        calendarDays.appendChild(div);
+    });
+}
+
+
+
+
+// Créneaux (UX only – backend décidera plus tard)
+async function generateTimeSlots() {
+    timeSlots.innerHTML = '';
+    selectedTime = null;
+    confirmRdvBtn.disabled = true;
+
+    const slots = ['09:00','10:30','14:00','15:30','17:00'];
+
+    const dateStr = selectedDate.toISOString().split('T')[0];
+
+    const reserved = await fetch(`/get_reserved_slots/?date=${dateStr}`)
+        .then(res => res.json())
+        .catch(() => []);
+
+    slots.forEach(time => {
+        const pill = document.createElement('div');
+        pill.className = 'time-slot';
+        pill.textContent = time;
+
+        if (reserved.includes(time)) {
+            pill.classList.add('disabled');
+        } else {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.time-slot').forEach(p => p.classList.remove('selected'));
+                pill.classList.add('selected');
+                selectedTime = time;
+                confirmRdvBtn.disabled = false;
+            });
+        }
+
+        timeSlots.appendChild(pill);
+    });
+}
 
 
 

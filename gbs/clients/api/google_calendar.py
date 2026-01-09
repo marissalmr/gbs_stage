@@ -53,12 +53,38 @@ def is_available(start_rdv, duration_minutes=60):
     events = service.events().list(  #demande à google calendar tous les events entre start_rdv et fin_rdv
         calendarId=settings.GOOGLE_CALENDAR_ID, 
         #On regarde dans le calendrier du tuteur
-        timeMin=start_rdv.isoformat() + "Z", #Convertir l'heure en UTC
-        timeMax=end_rdv.isoformat() + "Z",
+        timeMin=start_rdv.isoformat(), 
+        timeMax=end_rdv.isoformat(),
         singleEvents=True
     ).execute() #Envoie la requete à Google et récupere les events
 
     return len(events.get("items", [])) == 0 #liste des événements trouvés dans ce créneau.
                                             # Si la liste est vide le créneau est libre, on renvoie True.
+
+
+def show_if_rdv_available(date):
+    service = get_calendar_service()
+
+    start_day = datetime.combine(date, datetime.min.time())
+    end_day = start_day + timedelta(days=1)
+    #Plage analysée : [ 10/01 00:00  →  11/01 00:00 ]
+
+    events = service.events().list(  #Donne moi les évents de cette plage
+        calendarId=settings.GOOGLE_CALENDAR_ID, 
+        timeMin=start_day.isoformat(), 
+        timeMax=end_day.isoformat(),
+        singleEvents=True
+    ).execute() #Envoie la requete à Google et récupere les events
+    heure_reserver = []
+    for evenements in events.get("items", []): #Items = liste évenements google
+        start = events.get("start",{}).get("dateTime") #Récup heure début évenements
+        if start:
+            dt = datetime.fromisoformat(start.replace("Z", ""))
+            heure_reserver.append(dt.strftime("%H:%M"))
+            return heure_reserver
+
+
+
+
 
 

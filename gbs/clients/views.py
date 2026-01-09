@@ -6,6 +6,11 @@ from .models import *
 import json
 from datetime import datetime
 from django.db import IntegrityError
+from clients.api.google_calendar import (
+    is_available,
+    create_event
+)
+
 
 
 #Sert à : - récupérer le SIRET 
@@ -223,3 +228,29 @@ def submit_final(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+    
+def book_appointement(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+    data = json.loads(request.body.decode("utf-8"))
+    start_rdv = datetime.fromisoformat(data["start_rdv"])
+    if not is_available(start_rdv): 
+        return JsonResponse({"error": "Créneau déjà pris"}, status=400)
+    
+    # Récupération du contact en session
+    contact_id = request.session.get("contact_id")
+    if not contact_id:
+        return JsonResponse({"error": "Contact non trouvé en session"}, status=400)
+    contact = Contact.objects.get(id=contact_id)
+    create_event(
+        titre=f"RDV client : {contact.nom}",
+        description=f"Rendez-vous pris par {contact.nom} ({contact.email})",
+        start_rdv=start_rdv
+    )
+
+    return JsonResponse({
+        "success": True,
+        "message": "Rendez-vous créé avec succès",
+        "event_id": create_event.get("id"),
+        "start": start_rdv.isoformat()
+    }, status=201)

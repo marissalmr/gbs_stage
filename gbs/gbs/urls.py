@@ -6,6 +6,8 @@ from clients.views import api_questions
 from clients.views import save_answer
 from clients.views import save_contact
 from clients.views import submit_final
+from clients.views import book_appointement
+
 
 
 
@@ -37,6 +39,7 @@ urlpatterns = [
     path("api/check-siret/", check_siret, name="check_siret"),
     path("save_contact/", save_contact, name="save_contact"),
     path("save_answer/", save_answer, name="save_answer"),
-    path("submit_final/", submit_final, name="submit_final")
+    path("submit_final/", submit_final, name="submit_final"),
+    path("book_appointment/", book_appointement, name="book_appointment")
 
 ]
