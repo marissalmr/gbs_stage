@@ -77,7 +77,7 @@ def show_if_rdv_available(date):
     ).execute() #Envoie la requete à Google et récupere les events
     heure_reserver = []
     for evenements in events.get("items", []): #Items = liste évenements google
-        start = events.get("start",{}).get("dateTime") #Récup heure début évenements
+        start = evenements.get("start",{}).get("dateTime") #Récup heure début évenements
         if start:
             dt = datetime.fromisoformat(start.replace("Z", ""))
             heure_reserver.append(dt.strftime("%H:%M"))
