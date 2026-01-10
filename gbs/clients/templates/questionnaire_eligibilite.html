@@ -645,15 +645,12 @@ body {
 }
 
 .rdv-wrapper {
-    margin-top: 4rem;
-    padding: 3rem;
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(14px);
-    border-radius: 1.5rem;
+    margin-top: 2rem;
+    padding: 2.5rem;
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
     pointer-events: none;
-    transition: all 0.4s ease-in-out;
+    transition: all 0.45s cubic-bezier(.4,0,.2,1);
 }
 
 .rdv-wrapper.active {
@@ -661,6 +658,7 @@ body {
     transform: translateY(0);
     pointer-events: all;
 }
+
 
 .rdv-helper {
     font-size: 0.95rem;
@@ -671,14 +669,22 @@ body {
 
 
 .calendar-day {
-    padding: 0.75rem 0;
     text-align: center;
+    padding: 0.75rem 0;
     border-radius: 0.75rem;
     border: 1px solid var(--neutral-200);
-    width: 100%;
-    max-width: 60px; /* taille uniforme */
     cursor: pointer;
-    transition: all 0.3s ease;
+}
+
+.calendar-day small {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: capitalize;
+}
+
+
+.calendar-day strong {
+    font-size: 1.1rem;
 }
 
 .calendar-day:hover {
@@ -727,10 +733,11 @@ body {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem; /* réduire l’espace entre les jours */
-    margin-bottom: 1rem;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2rem;
 }
+
 
 .calendar-day.disabled {
     opacity: 0.4;
@@ -814,38 +821,33 @@ body {
             Programmez maintenant votre diagnostic personnalisé.
         </p>
 
-        <button type="button" class="btn btn-primary" id="bookRdvBtn">
-            Prendre rendez-vous
-        </button>
+       <button type="button" class="btn btn-primary" id="bookRdvBtn">
+    Prendre rendez-vous
+</button>
 
-        <!-- Phase 2 : RDV -->
-        <div class="rdv-wrapper" id="rdvWrapper">
+<div class="rdv-wrapper" id="rdvWrapper">
 
-            <p class="rdv-helper">
-                Sélectionnez le créneau de votre diagnostic gratuit avec notre expert
-            </p>
+    <p class="rdv-helper">
+        Sélectionnez le créneau de votre diagnostic gratuit
+    </p>
 
-            <div class="calendar-wrapper">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-        <button id="prevDay" class="btn btn-outline">←</button>
-        <div id="calendarMonth" class="serif-title" style="text-align:center;"></div>
-        <button id="nextDay" class="btn btn-outline">→</button>
+    <div class="calendar-wrapper">
+        <div class="calendar-nav">
+            <button id="prevWeek" class="btn btn-outline">←</button>
+            <div id="calendarMonth" class="serif-title"></div>
+            <button id="nextWeek" class="btn btn-outline">→</button>
+        </div>
+
+        <div class="calendar-grid" id="calendarDays"></div>
     </div>
 
-    <div class="calendar-grid" id="calendarDays"></div>
+    <div class="time-slots" id="timeSlots"></div>
+
+    <button class="btn btn-primary" id="confirmRdvBtn" disabled>
+        Confirmer le rendez-vous
+    </button>
+
 </div>
-
-
-
-            </div>
-
-            <div class="time-slots" id="timeSlots"></div>
-
-            <button class="btn btn-primary" id="confirmRdvBtn" disabled>
-                Confirmer le rendez-vous
-            </button>
-
-        </div>
 
     </div>
 
@@ -908,12 +910,16 @@ verifyBtn.addEventListener('click', async () => {
 });
 
 async function loadQuestions() {
+
     
     
     const res = await fetch('/api/questions/');
 
     const data = await res.json();
     questions = data.questions;
+    
+    lastQuestionStep = questions.length + 1;
+
 
     const container = document.getElementById('questionSteps');
     container.innerHTML = '';
@@ -987,7 +993,7 @@ async function loadQuestions() {
     if (q.code === 'Q4') QUESTION_CODES.Q4 = index + 2;
 });
 
-    totalSteps = questions.length + 3;
+    totalSteps = questions.length + 4;
     document.querySelectorAll('.totalSteps').forEach(el => el.innerText = totalSteps);
     
 }
@@ -1013,9 +1019,9 @@ function toggleMultipleOption(qid, value, button) {
 
 async function submitMultipleAnswer(qid) {
     if (currentMultipleSelections.length === 0) return;
-    
+
     formData.answers[qid] = currentMultipleSelections;
-    
+
     try {
         await fetch('/save_answer/', {
             method:'POST',
@@ -1025,26 +1031,16 @@ async function submitMultipleAnswer(qid) {
     } catch(e) {
         console.error(e);
     }
-    
-    // Réinitialiser les sélections pour la prochaine question
+
     currentMultipleSelections = [];
+
     const stepFinal = getActiveStepIndex();
+    if (stepFinal === lastQuestionStep) {
+        showFinalRecap();
+        return;
+    }
 
-if (stepFinal === totalSteps - 2) {
-    showFinalRecap();
-    return;
-}
-
-nextStep();
-
-
-if (stepFinal === totalSteps - 2) {
-    showFinalRecap();
-    return;
-}
-
-nextStep();
-
+    nextStep();
 }
 
 function selectSingleOption(qid, value, btn) {
@@ -1101,7 +1097,7 @@ async function submitSingleAndNext(qid) {
     // ----- DERNIÈRE QUESTION ? -----
     const stepFinal = getActiveStepIndex();
 
-    if (stepFinal === totalSteps - 2) {
+    if (stepFinal === lastQuestionStep) {
         showFinalRecap();
         return;
     }
@@ -1329,103 +1325,77 @@ async function submitFinal() {
 // ===============================
 // RDV UX FLOW
 // ===============================
+// ===============================
+// RDV UX FLOW
+// ===============================
 const rdvWrapper = document.getElementById('rdvWrapper');
-let startOffset = 1; // jour de départ affiché (1 = demain)
-const daysToShow = 7;
-
+const bookRdvBtn = document.getElementById('bookRdvBtn');
 const calendarDays = document.getElementById('calendarDays');
 const calendarMonth = document.getElementById('calendarMonth');
 const timeSlots = document.getElementById('timeSlots');
 const confirmRdvBtn = document.getElementById('confirmRdvBtn');
 
-let startDate = new Date();
-startDate.setDate(startDate.getDate() + 1); // Commence demain
 let selectedDate = null;
 let selectedTime = null;
 
-document.getElementById('prevDay').addEventListener('click', () => {
-    startDate = addBusinessDays(startDate, -5);
+bookRdvBtn.addEventListener('click', () => {
+    bookRdvBtn.style.display = 'none';
+    rdvWrapper.classList.add('active');
     generateCalendar();
 });
 
-// Transition bouton → calendrier
-document.getElementById('bookRdvBtn').addEventListener('click', () => {
-    document.getElementById('bookRdvBtn').style.opacity = '0';
-    document.getElementById('bookRdvBtn').style.pointerEvents = 'none';
+let weekStart = getNextMonday(new Date());
 
-    setTimeout(() => rdvWrapper.classList.add('active'), 400);
-    generateCalendar();
-});
-
-// Génération jours (7 prochains jours)
-function addBusinessDays(date, days) {
-    const newDate = new Date(date);
-    let added = 0;
-    const step = days > 0 ? 1 : -1;
-
-    while (added < Math.abs(days)) {
-        newDate.setDate(newDate.getDate() + step);
-        const day = newDate.getDay();
-        if (day !== 0 && day !== 6) added++; // skip Dimanche & Samedi
-    }
-
-    return newDate;
+function getNextMonday(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? 1 : 8 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0,0,0,0);
+    return d;
 }
 
-
-
-document.getElementById('nextDay').addEventListener('click', () => {
-    startDate = addBusinessDays(startDate, 5);
+document.getElementById('prevWeek').onclick = () => {
+    weekStart.setDate(weekStart.getDate() - 7);
     generateCalendar();
-});
-// Fonction pour générer le calendrier
+};
+
+document.getElementById('nextWeek').onclick = () => {
+    weekStart.setDate(weekStart.getDate() + 7);
+    generateCalendar();
+};
+
 function generateCalendar() {
     calendarDays.innerHTML = '';
 
     const days = [];
-    let tempDate = new Date(startDate);
-
-    // Trouver le lundi de la semaine de tempDate
-    const dayOfWeek = tempDate.getDay(); // 0 = Dimanche, 1 = Lundi ...
-    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Si dim, recule 6 jours
-    tempDate.setDate(tempDate.getDate() + diffToMonday);
-
-    // Génère les 5 jours de la semaine (Lun-Ven)
     for (let i = 0; i < 5; i++) {
-        const day = new Date(tempDate);
-        day.setDate(tempDate.getDate() + i);
-        days.push(day);
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + i);
+        days.push(d);
     }
 
-    // Affiche le mois/année du lundi
-    calendarMonth.textContent = days[0].toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    calendarMonth.textContent =
+        days[0].toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
-    days.forEach(dayDate => {
-        const div = document.createElement('div');
-        div.className = 'calendar-day';
-        div.innerHTML = `<small>${dayDate.toLocaleDateString('fr-FR', { weekday: 'short' })}</small><br><strong>${dayDate.getDate()}</strong>`;
-        const today = new Date()
-        today.setHours(0,0,0,0)
-        // Désactive les jours passés
-        if (dayDate < today) div.classList.add('disabled');
-        else {
-            div.addEventListener('click', () => {
-                document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
-                div.classList.add('selected');
-                selectedDate = dayDate;
-                generateTimeSlots();
-            });
+    days.forEach(day => {
+        const el = document.createElement('div');
+        el.className = 'calendar-day';
+        el.innerHTML = `
+            <small>${day.toLocaleDateString('fr-FR', { weekday: 'short' })}</small>
+            <strong>${day.getDate()}</strong>
+        `;
 
-            
-        }
-     
+        el.onclick = () => {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedDate = day;
+            generateTimeSlots();
+        };
 
-        calendarDays.appendChild(div);
+        calendarDays.appendChild(el);
     });
 }
-
-
-
 
 // Créneaux (UX only – backend décidera plus tard)
 async function generateTimeSlots() {
@@ -1463,7 +1433,38 @@ async function generateTimeSlots() {
     });
 }
 
+confirmRdvBtn.addEventListener('click', async () => {
+    if (!selectedDate || !selectedTime) return;
 
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const startRdv = `${dateStr}T${selectedTime}:00`;
+
+    try {
+        const res = await fetch('/book_appointment/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                start_rdv: startRdv
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || 'Erreur lors de la réservation');
+        }
+
+        alert('✅ Rendez-vous confirmé');
+        confirmRdvBtn.disabled = true;
+
+    } catch (e) {
+        alert(e.message);
+        console.error(e);
+    }
+});
 
 </script>
 </body>

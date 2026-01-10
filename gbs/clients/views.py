@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+import pytz
 from .forms import *
 from .api.insee import verify_siret
 from .models import *
@@ -148,7 +149,7 @@ def homepage(request):
 
 def questionnaire(request):
     # On récupère toutes les questions en base
-    questions = Question.objects.all()
+    questions = Question.objects.order_by("code")
 
     if request.method == "POST":
          # On recrée le formulaire AVEC les données envoyées + liste questions
@@ -174,7 +175,7 @@ def questionnaire(request):
         return render(request, "questionnaire_eligibilite.html", {"form": form})
 
 def api_questions(request):
-    questions = Question.objects.all()
+    questions = Question.objects.order_by("code")
     data = []
 
     for q in questions:
@@ -229,8 +230,13 @@ def submit_final(request):
 def book_appointement(request):
     if request.method != "POST":
         return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+   
     data = json.loads(request.body.decode("utf-8"))
     start_rdv = datetime.fromisoformat(data["start_rdv"])
+
+    tz = pytz.timezone("Europe/Paris")
+    start_rdv = tz.localize(start_rdv)
+    
     if not is_available(start_rdv): 
         return JsonResponse({"error": "Créneau déjà pris"}, status=400)
     
@@ -239,7 +245,7 @@ def book_appointement(request):
     if not contact_id:
         return JsonResponse({"error": "Contact non trouvé en session"}, status=400)
     contact = Contact.objects.get(id=contact_id)
-    create_event(
+    event = create_event(
         titre=f"RDV client : {contact.nom}",
         description=f"Rendez-vous pris par {contact.nom} ({contact.email})",
         start_rdv=start_rdv
@@ -248,7 +254,7 @@ def book_appointement(request):
     return JsonResponse({
         "success": True,
         "message": "Rendez-vous créé avec succès",
-        "event_id": create_event.get("id"),
+        "event_id": event.get("id"),
         "start": start_rdv.isoformat()
     }, status=201)
 
