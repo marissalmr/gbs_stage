@@ -47,7 +47,12 @@ class Dossiers(models.Model):
     statut = models.CharField(max_length=30,choices=statut_choices, default="en_attente")
     eligibilite_estimee = models.BooleanField(default=False)
     date_creation = models.DateTimeField(auto_now_add=True)
-
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['entreprise'], name='unique_siret_per_dossier'
+            )
+        ]
 class Documents(models.Model):
     dossier = models.ForeignKey(Dossiers, on_delete=models.CASCADE,related_name='documents'),
     nom = models.CharField(max_length=150),

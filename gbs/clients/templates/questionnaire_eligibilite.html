@@ -1024,6 +1024,10 @@ verifyBtn.addEventListener('click', async () => {
     try {
         const res = await fetch(`/api/check-siret/?siret=${formData.siret}`);
         const data = await res.json();
+         if(!res.ok) {
+            // Si le serveur renvoie une erreur (400), afficher le message d'erreur
+            throw new Error(data.error || 'Erreur lors de la vérification');
+              }
         if(!data.found) throw new Error('SIRET non trouvé');
         formData.entrepriseData = data.data;
         document.getElementById('companyName').textContent = data.data.nom_officiel;

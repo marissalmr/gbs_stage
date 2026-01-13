@@ -45,7 +45,15 @@ def check_siret(request):
             {"error": "Aucun SIRET fourni dans la requête."},
             status=400  # 400 = erreur du client
         )
-     # 3. On appelle ta fonction qui contacte INSEE + gère token + cache
+    
+    if Dossiers.objects.filter(entreprise__siret=siret).exists():
+        return JsonResponse({
+            "valid": False,
+            "error": "Ce SIRET a déjà rempli le questionnaire."
+        }, status=400)
+
+   
+    siret = siret.replace(" ", "").strip()
 
     try : 
         data = verify_siret(siret)
@@ -93,11 +101,13 @@ def save_contact(request):
         data = json.loads(request.body)
         date_creation = data.get("date_creation")
 
+          
         if Contact.objects.filter(email=data["email"]).exists():
             return JsonResponse(
                 {"error": "Cet email a déjà été utilisé pour un dossier"},
                 status=400
             )
+
 
         if date_creation:
             date_creation = datetime.strptime(date_creation, "%Y-%m-%d").date()
