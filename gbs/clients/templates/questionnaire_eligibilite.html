@@ -906,8 +906,9 @@ body {
 </div>
 
 <!-- Step 1: Personal Info -->
-<div class="step" data-step="1">
-    <div class="step-badge">Étape 2 / <span class="totalSteps">?</span></div>
+<!-- Step Contact (nouvelle position après recap) -->
+<div class="step" data-step="contact">
+    <div class="step-badge">Étape Contact</div>
     <h1>Vos informations de contact</h1>
     <div class="company-info" id="companyInfo" style="display:none;">
         <span id="companyName"></span>
@@ -923,10 +924,11 @@ body {
         </div>
         <div class="button-group">
             <button type="button" class="btn btn-outline back-btn">Retour</button>
-            <button type="button" class="btn btn-primary next-btn" disabled>Continuer</button>
+            <button type="button" class="btn btn-primary next-btn" id="submitContactBtn" disabled>Confirmer et envoyer</button>
         </div>
     </div>
 </div>
+
 
 <!-- Question Steps (dynamiquement générées) -->
 <div id="questionSteps"></div>
@@ -1026,14 +1028,21 @@ verifyBtn.addEventListener('click', async () => {
         formData.entrepriseData = data.data;
         document.getElementById('companyName').textContent = data.data.nom_officiel;
         document.getElementById('companyInfo').style.display = 'flex';
+
+        // Charger questions
         await loadQuestions();
-        nextStep();
+
+        // Passer au **premier step question** (le premier step dynamique après SIRET)
+        currentStep = 2; // si ton premier step question a data-step="2"
+        showStep(currentStep);
+
     } catch(e) {
         document.getElementById('siretError').style.display='block';
         document.getElementById('siretError').innerText = e.message;
         verifyBtn.disabled = false;
     }
 });
+
 
 async function loadQuestions() {
 
@@ -1237,11 +1246,11 @@ async function submitSingleAndNext(qid) {
 ['nom','email','telephone','adresse','ville','code_postal'].forEach(f=>{
     document.getElementById(f).addEventListener('input', ()=>{
         formData.contact[f] = document.getElementById(f).value.trim();
-        document.querySelector('[data-step="1"] .next-btn').disabled = !Object.values(formData.contact).every(v=>v);
+        document.getElementById('submitContactBtn').disabled = !Object.values(formData.contact).every(v=>v);
     });
 });
 
-document.querySelector('[data-step="1"] .next-btn').addEventListener('click', async () => {
+document.getElementById('submitContactBtn').addEventListener('click', async () => {
     try {
         const res = await fetch('/save_contact/', {
             method: 'POST',
@@ -1261,13 +1270,15 @@ document.querySelector('[data-step="1"] .next-btn').addEventListener('click', as
             throw new Error(err.error || 'Erreur sauvegarde contact');
         }
 
-        nextStep();
+        // après contact, envoi final
+        await submitFinal();
 
     } catch (e) {
         console.error('Erreur save_contact:', e);
         alert(e.message);
     }
 });
+
 
 async function submitAnswer(qid, value) {
     formData.answers[qid] = value;
@@ -1312,6 +1323,12 @@ function updateProgress() {
 
 function nextStep() { 
     currentStep++; 
+    if (currentStep > lastQuestionStep) {
+        // passer au step recap
+        showStep('final-recap');
+        return;
+    }
+
     showStep(currentStep === totalSteps - 1 ? 'final' : currentStep); 
 }
 
@@ -1410,8 +1427,14 @@ function goToEdit() {
 
 
 async function submitFinal() {
+    // Si contact non rempli, on passe à l'étape contact
+    if (!formData.contact.nom) {
+        currentStep = 'contact';
+        showStep('contact');
+        return;
+    }
+
     try {
-        // Optionnel : feedback visuel
         const btn = document.querySelector('.final-recap-actions .btn-primary');
         btn.disabled = true;
         btn.innerHTML = 'Envoi en cours…';
@@ -1430,14 +1453,12 @@ async function submitFinal() {
             throw new Error(err.error || 'Erreur lors de l’envoi');
         }
 
-        // 👉 succès → écran final
         currentStep = totalSteps - 1;
         showStep('final');
 
     } catch (e) {
         alert(e.message);
         console.error(e);
-
         const btn = document.querySelector('.final-recap-actions .btn-primary');
         if (btn) {
             btn.disabled = false;
@@ -1445,6 +1466,7 @@ async function submitFinal() {
         }
     }
 }
+
 
 
 
