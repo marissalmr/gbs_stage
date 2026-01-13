@@ -14,6 +14,8 @@ from clients.api.google_calendar import (
     create_event
 )
 from clients.api.google_calendar import show_if_rdv_available
+from django.core.mail import send_mail
+
 
 
 
@@ -53,8 +55,6 @@ def check_siret(request):
         }, status=400)
 
    
-    siret = siret.replace(" ", "").strip()
-
     try : 
         data = verify_siret(siret)
         
@@ -223,19 +223,59 @@ def save_answer(request):
         return JsonResponse({"success": True})
     return JsonResponse({"error":"Invalid request"}, status=400)
 
+def send_mail_summary(dossier):
+    entreprise = dossier.entreprise
+    contact = dossier.contact
+    reponses = dossier.responses.select_related("question")
+
+    recap_mail =  "Nouvelle soumission de questionnaire\n\n"
+
+    recap_mail += f"SIRET : {entreprise.siret}\n"
+    recap_mail += f"Entreprise : {entreprise.nom_officiel}\n\n"
+
+    recap_mail += " Contact\n"
+    recap_mail += f"Nom : {contact.nom}\n"
+    recap_mail += f"Email : {contact.email}\n"
+    recap_mail += f"Téléphone : {contact.telephone}\n\n"
+
+    recap_mail += "Réponses au questionnaire\n\n"
+
+    for rep in reponses:
+        question = rep.question.texte_question
+        answer = rep.reponse_user
+
+        # Si réponse multiple (liste)
+        if isinstance(answer, list):
+            answer = ", ".join(answer)
+
+        recap_mail += f"- {question}\n"
+        recap_mail += f"  ➜ {answer}\n\n"
+
+    send_mail(
+        subject="Nouvelle demande – Questionnaire GBS",
+        message=recap_mail,
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=["marielnrtstu@gmail.com"],
+        fail_silently=False,
+    )
 def submit_final(request):
     if request.method != "POST":
         return JsonResponse({"error": "Méthode non autorisée"}, status=405)
 
     try:
         data = json.loads(request.body)
-        # data["siret"]
-        # data["entrepriseData"]
-        # data["contact"]
-        # data["answers"]
+        siret = data.get('siret')
+        if not siret:
+            return JsonResponse({"error": "SIRET manquant"}, status=400)
+        dossier = Dossiers.objects.select_related(
+            "entreprise",
+            "contact"
+        ).get(entreprise__siret=siret)
+
+        send_mail_summary(dossier)
 
         return JsonResponse({"success": True})
-
+    
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
     
