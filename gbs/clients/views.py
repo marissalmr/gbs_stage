@@ -1,7 +1,9 @@
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 import pytz
 from .forms import *
+from clients.api.google_calendar import get_calendar_service
 from .api.insee import verify_siret
 from .models import *
 import json
@@ -227,24 +229,50 @@ def submit_final(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
     
-def book_appointement(request):
+def book_appointment(request):
     if request.method != "POST":
         return JsonResponse({"error": "Méthode non autorisée"}, status=405)
-   
+
     data = json.loads(request.body.decode("utf-8"))
     start_rdv = datetime.fromisoformat(data["start_rdv"])
 
     tz = pytz.timezone("Europe/Paris")
     start_rdv = tz.localize(start_rdv)
-    
-    if not is_available(start_rdv): 
+
+    # 1️⃣ Interdire les dates passées
+    now = datetime.now(pytz.timezone("Europe/Paris"))
+    if start_rdv < now:
+        return JsonResponse(
+            {"error": "Impossible de réserver un rendez-vous dans le passé"},
+            status=400
+        )
+
+    # 2️⃣ Vérifier disponibilité Google Calendar
+    if not is_available(start_rdv):
         return JsonResponse({"error": "Créneau déjà pris"}, status=400)
-    
-    # Récupération du contact en session
+
+    # 3️⃣ Récupération du contact
     contact_id = request.session.get("contact_id")
     if not contact_id:
         return JsonResponse({"error": "Contact non trouvé en session"}, status=400)
+
     contact = Contact.objects.get(id=contact_id)
+
+    # 4️⃣ Vérifier si le contact a déjà un RDV
+    service = get_calendar_service()
+    events = service.events().list(
+        calendarId=settings.GOOGLE_CALENDAR_ID,
+        q=contact.email,
+        singleEvents=True
+    ).execute()
+
+    if events.get("items"):
+        return JsonResponse(
+            {"error": "Un rendez-vous existe déjà pour ce contact"},
+            status=400
+        )
+
+    # 5️⃣ Création du RDV
     event = create_event(
         titre=f"RDV client : {contact.nom}",
         description=f"Rendez-vous pris par {contact.nom} ({contact.email})",

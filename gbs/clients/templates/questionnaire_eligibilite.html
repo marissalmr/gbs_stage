@@ -9,6 +9,139 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
+/* Calendar wrapper & navigation */
+.calendar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.calendar-nav button {
+    min-width: 40px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--neutral-300);
+    background: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.calendar-nav button:hover {
+    background: var(--gold-light);
+    border-color: var(--gold);
+}
+
+/* Month title */
+#calendarMonth {
+    font-family: "Times New Roman", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+    text-align: center;
+    flex: 1;
+}
+
+/* Grid for days: horizontal layout */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+    justify-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-day {
+    text-align: center;
+    padding: 0.75rem 0;
+    border-radius: 0.75rem;
+    border: 1px solid var(--neutral-200);
+    cursor: pointer;
+    transition: all 0.25s ease-in-out;
+    min-width: 50px;
+}
+
+.calendar-day small {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: capitalize;
+    color: var(--neutral-600);
+}
+
+.calendar-day strong {
+    font-size: 1.1rem;
+}
+
+.calendar-day:hover {
+    border-color: var(--gold);
+    background: var(--gold-light);
+}
+
+.calendar-day.selected {
+    background: var(--gold);
+    color: var(--anthracite);
+    font-weight: 600;
+}
+
+.calendar-day.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* Time slots */
+.time-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+}
+
+.time-slot {
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.25s ease-in-out;
+}
+
+.time-slot:hover {
+    background: var(--gold-light);
+}
+
+.time-slot.selected {
+    background: var(--gold);
+    color: var(--anthracite);
+    font-weight: 600;
+}
+
+.time-slot.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* RDV wrapper animation */
+.rdv-wrapper {
+    margin-top: 2rem;
+    padding: 2rem 1.5rem;
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
+    transition: all 0.45s cubic-bezier(.4,0,.2,1);
+}
+
+.rdv-wrapper.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
 
 :root {
     --gold: #D4AF37;
@@ -831,17 +964,16 @@ body {
         Sélectionnez le créneau de votre diagnostic gratuit
     </p>
 
-    <div class="calendar-wrapper">
-        <div class="calendar-nav">
-            <button id="prevWeek" class="btn btn-outline">←</button>
-            <div id="calendarMonth" class="serif-title"></div>
-            <button id="nextWeek" class="btn btn-outline">→</button>
-        </div>
-
-        <div class="calendar-grid" id="calendarDays"></div>
+   <div class="calendar-wrapper">
+    <div class="calendar-nav">
+        <button id="prevWeek">←</button>
+        <div id="calendarMonth" class="serif-title"></div>
+        <button id="nextWeek">→</button>
     </div>
+    <div class="calendar-grid" id="calendarDays"></div>
+</div>
+<div class="time-slots" id="timeSlots"></div>
 
-    <div class="time-slots" id="timeSlots"></div>
 
     <button class="btn btn-primary" id="confirmRdvBtn" disabled>
         Confirmer le rendez-vous
@@ -857,12 +989,6 @@ body {
 </div>
 </main>
 
-<footer>
-<div class="footer-content">
-    <button type="button" id="footerBackBtn" class="footer-back-btn" disabled>← Retour</button>
-    <span>GBS - Questionnaire d'éligibilité</span>
-</div>
-</footer>
 
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
