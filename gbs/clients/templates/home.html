@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -450,6 +451,85 @@
             margin-bottom: 1.5rem;
         }
 
+        .top-bar {
+
+    font-size: 0.75rem;
+    height: 44px;
+    background: #F5F5F5;
+}
+
+.top-bar-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.top-bar-socials {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* EXACT comme demandé */
+}
+
+
+.top-bar-socials a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+
+.top-bar-socials img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain; /* CRUCIAL */
+    opacity: 1;
+}
+
+
+/* Facebook & Instagram légèrement agrandis */
+.top-bar-socials img[src*="fb"],
+.top-bar-socials img[src*="instagram"] {
+    transform: scale(1.60);
+}
+
+.top-bar-socials img[src*="linkedin"] {
+    transform: scale(1.20);
+}
+
+
+
+.top-bar-socials a:hover img {
+    opacity: 1;
+}
+
+
+.top-bar-phone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-bar-phone img {
+    width: 14px;
+    height: 14px;
+    color: var(--gold);
+}
+
+.top-bar-phone a {
+    text-decoration: none;
+    font-weight: 500;
+    color: var(--anthracite);
+    letter-spacing: 0.02em;
+}
+
+
+
         .cert-logo {
             font-size: 1.5rem;
             font-weight: 800;
@@ -863,6 +943,10 @@
             .header-container {
                 padding: 0 1rem;
             }
+            
+            .whatsapp-tooltip {
+    display: none;
+}
 
             .nav {
                 display: none;
@@ -1076,19 +1160,95 @@ section {
     max-width: 720px;
 }
 
+/* WhatsApp Floating Button */
+.whatsapp-float {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #25D366;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.whatsapp-float:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.whatsapp-float img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+
+
+}
+
+
+.whatsapp-tooltip {
+    position: absolute;
+    right: 76px;
+    background: var(--anthracite);
+    color: var(--white);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.whatsapp-float:hover .whatsapp-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
     </style>
 </head>
 <body>
 
   
+<div class="top-bar">
+    <div class="top-bar-container">
+        <!-- Réseaux sociaux -->
+        <div class="top-bar-socials">
+                <a href="https://www.linkedin.com/company/gbs-secretariat/about/?viewAsMember=true" target="_blank" aria-label="LinkedIn">
+                <img src="{% static 'images/logo_linkedin.svg' %}" alt="">
+            </a>
+            <a href="#" aria-label="Facebook">
+                <img src="{% static 'images/logo_fb.svg' %}" alt="">
+            </a>
+    <a href="https://www.instagram.com/gbsbatiment/" target="_blank" aria-label="Instagram">
+                <img src="{% static 'images/logo_instagram.svg' %}" alt="">
+            </a>
+        </div>
+
+        <!-- Téléphone -->
+        <div class="top-bar-phone">
+            <img src="{% static 'images/phone.svg' %}" alt="">
+            <a href="tel:+33788168481">+33 7 88 16 84 81</a>
+        </div>
+    </div>
+</div>
 
 
     <!-- Header -->
     <header class="header" id="header">
         <div class="header-container">
            <div class="logo">
-            {% load static %}
+            
 
             
        <img src="{% static 'images/logo_gbs.svg' %}" alt="GBS"
@@ -1326,7 +1486,7 @@ section {
                         <div class="stat-label">Taux d'obtention</div>
                     </div>
                     <div class="stat-card reveal">
-                        <div class="stat-number" data-count="24">0</div>
+                        <div class="stat-number" data-count="30">0</div>
                         <div class="stat-label">Jours en moyenne</div>
                     </div>
                 </div>
@@ -1513,5 +1673,16 @@ section {
 });
 
     </script>
+    <!-- WhatsApp Floating Button -->
+<a
+    href="https://wa.me/33788168481"
+    class="whatsapp-float"
+    target="_blank"
+    aria-label="Contact WhatsApp"
+>
+    <span class="whatsapp-tooltip">Une question ? Écrivez-nous</span>
+    <img src="{% static 'images/logo_whatsapp.svg' %}" alt="WhatsApp">
+</a>
+
 </body>
 </html>
