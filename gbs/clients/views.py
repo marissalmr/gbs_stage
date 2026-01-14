@@ -101,26 +101,22 @@ def save_contact(request):
         data = json.loads(request.body)
         date_creation = data.get("date_creation")
 
-          
-        if Contact.objects.filter(email=data["email"]).exists():
-            return JsonResponse(
-                {"error": "Cet email a déjà été utilisé pour un dossier"},
-                status=400
-            )
-
-
         if date_creation:
             date_creation = datetime.strptime(date_creation, "%Y-%m-%d").date()
 
+        defaults = {
+            "date_creation": date_creation,
+            "statut_admin": data.get("statut_admin"),
+            "autres_noms": data.get("autres_noms"),
+            "prenom_dirigeant": data.get("prenom_dirigeant"),
+        }
+
+        if data.get("nom_officiel"):
+            defaults["nom_officiel"] = data["nom_officiel"]
+
         entreprise, _ = Entreprise.objects.update_or_create(
             siret=data["siret"],
-            defaults={
-                "nom_officiel": data.get("nom_officiel"),
-                "date_creation": date_creation,
-                "statut_admin": data.get("statut_admin"),
-                "autres_noms": data.get("autres_noms"),
-                "prenom_dirigeant": data.get("prenom_dirigeant"),
-            }
+            defaults=defaults
         )
 
         contact, _ = Contact.objects.update_or_create(
@@ -134,11 +130,18 @@ def save_contact(request):
             }
         )
 
-        dossier, _ = Dossiers.objects.get_or_create(
-            contact=contact,
+        dossier, created = Dossiers.objects.get_or_create(
             entreprise=entreprise,
-            type_dossier="QUALIBAT"
+                defaults={
+                    "contact": contact,
+                    "type_dossier": "QUALIBAT"
+                }
         )
+
+# Si le dossier existe déjà, on met à jour le contact
+        if not created:
+            dossier.contact = contact
+            dossier.save()
 
         request.session["contact_id"] = contact.id
         request.session["entreprise_id"] = entreprise.id
@@ -146,10 +149,9 @@ def save_contact(request):
 
         return JsonResponse({"success": True})
 
-    except IntegrityError:
-        return JsonResponse({"error": "Conflit base de données"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 def prediagnostique_page(request):
     form = ClientForm()
@@ -160,31 +162,7 @@ def homepage(request):
 
 
 def questionnaire(request):
-    # On récupère toutes les questions en base
-    questions = Question.objects.order_by("code")
-
-    if request.method == "POST":
-         # On recrée le formulaire AVEC les données envoyées + liste questions
-        form = QuestionnaireForm(request.POST, questions=questions)
-        if form.is_valid(): 
-             # On parcourt toutes les réponses du formulaire
-            for question_id, reponse in form.cleaned_data.items():
-                # On récupère la question correspondante
-                question = Question.objects.get(id=question_id)
-                contact = Contact.objects.get(id=request.session.get("contact_id"))
-
-                Reponse.objects.create(
-                    contact = contact,
-                    question = question,
-                    reponse_user = reponse
-
-                )
-                
-            return redirect("success")
-                
-    else:
-        form = QuestionnaireForm(questions=questions)
-        return render(request, "questionnaire_eligibilite.html", {"form": form})
+       return render(request, "questionnaire_eligibilite.html")
 
 def api_questions(request):
     questions = Question.objects.order_by("code")
@@ -212,7 +190,8 @@ def save_answer(request):
         question = Question.objects.get(id=data["question_id"])
 
         # On récupère le dossier
-        dossier = Dossiers.objects.filter(contact=contact).first()
+        dossier_id = request.session.get("dossier_id")
+        dossier = Dossiers.objects.get(id=dossier_id)
 
         Reponse.objects.create(
             dossier=dossier,
@@ -263,21 +242,29 @@ def submit_final(request):
         return JsonResponse({"error": "Méthode non autorisée"}, status=405)
 
     try:
-        data = json.loads(request.body)
-        siret = data.get('siret')
-        if not siret:
-            return JsonResponse({"error": "SIRET manquant"}, status=400)
+        dossier_id = request.session.get("dossier_id")
+        if not dossier_id:
+            return JsonResponse(
+                {"error": "Dossier non trouvé en session"},
+                status=400
+            )
+        
         dossier = Dossiers.objects.select_related(
             "entreprise",
             "contact"
-        ).get(entreprise__siret=siret)
+        ).get(id=dossier_id)
 
+        print(f"🔍 Dossier trouvé : {dossier.id}")  # ← AJOUTE
+        print(f"🔍 Nb réponses : {dossier.responses.count()}")  # ← AJOUTE
+        
         send_mail_summary(dossier)
 
         return JsonResponse({"success": True})
     
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+
     
 def book_appointment(request):
     if request.method != "POST":
@@ -358,3 +345,45 @@ def get_booked_times_for_day(request):
 
     #Renvoie la liste des créneaux sous forme JSON au frontend
     return JsonResponse({"reserved": available_or_not})
+
+def contact_homepage(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+
+        nom = data.get("nom")
+        entreprise = data.get("entreprise")
+        email = data.get("email")
+        message = data.get("message")
+
+        if not nom or not email or not message:
+            return JsonResponse(
+                {"error": "Nom, email et message sont obligatoires"},
+                status=400
+            )
+
+        message_email = f"""
+ Nouveau message depuis la homepage
+
+Nom : {nom}
+Entreprise : {entreprise}
+Email : {email}
+
+Message :
+{message}
+        """
+
+        send_mail(
+            subject="Nouveau message – Page Contact",
+            message=message_email,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=["marielnrtstu@gmail.com"],
+            fail_silently=False,
+        )
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

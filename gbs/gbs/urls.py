@@ -1,7 +1,6 @@
-from clients.views import check_siret
+from clients.views import check_siret, questionnaire
 from clients.views import prediag_view
 from clients.views import homepage
-from clients.views import questionnaire
 from clients.views import api_questions
 from clients.views import save_answer
 from clients.views import save_contact
@@ -9,6 +8,7 @@ from clients.views import submit_final
 from clients.views import book_appointment
 from clients.views import get_booked_times_for_day
 from clients.views import send_mail_summary
+from clients.views import contact_homepage
 
 
 
@@ -44,7 +44,9 @@ urlpatterns = [
     path("submit_final/", submit_final, name="submit_final"),
     path("book_appointment/", book_appointment, name="book_appointment"),
     path("get_booked_times_for_day/", get_booked_times_for_day, name="get_booked_times_for_day"),
-    path("send_mail_summary",send_mail_summary, name="send_mail_summary")
+    path("send_mail_summary",send_mail_summary, name="send_mail_summary"),
+    path("contact/",contact_homepage, name="contact_homepage")
+
 
 
 ]
