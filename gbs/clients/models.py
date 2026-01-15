@@ -90,6 +90,12 @@ class Prediagnostique(models.Model):
     sous_traitee = models.BooleanField(default=False)
     score = models.IntegerField(null=True, blank=True)
 
+class RendezVous(models.Model):
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
+    start = models.DateTimeField()
+    google_event_id = models.CharField(max_length=255)
+    reminder_sent = models.BooleanField(default=False)
+
 
 
 

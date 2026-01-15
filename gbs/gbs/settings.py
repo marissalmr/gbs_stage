@@ -44,6 +44,10 @@ EMAIL_HOST_USER = 'marielnrtstu@gmail.com'
 EMAIL_HOST_PASSWORD = 'prmf vkgk xuoh qqrr'
 
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -68,6 +72,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'clients',
+    "django_celery_beat"
 ]
 
 MIDDLEWARE = [

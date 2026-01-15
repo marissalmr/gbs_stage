@@ -316,6 +316,13 @@ def book_appointment(request):
         start_rdv=start_rdv
     )
 
+    RendezVous.objects.create(
+            contact=contact,
+            start=start_rdv,
+            google_event_id=event.get('id'),
+            reminder_sent = False
+        )
+
     return JsonResponse({
         "success": True,
         "message": "Rendez-vous créé avec succès",
@@ -387,3 +394,4 @@ Message :
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
