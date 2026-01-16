@@ -15,8 +15,9 @@ from clients.api.google_calendar import (
 )
 from clients.api.google_calendar import show_if_rdv_available
 from django.core.mail import send_mail
-
-
+from .models import Reponse
+from .service import api_error
+from .service import api_method_not_allowed
 
 
 #Sert à : - récupérer le SIRET 
@@ -43,16 +44,10 @@ def check_siret(request):
     # 2. Si aucun SIRET fourni → erreur 400 (mauvaise requête)
 
     if not siret:
-        return JsonResponse(
-            {"error": "Aucun SIRET fourni dans la requête."},
-            status=400  # 400 = erreur du client
-        )
+        api_error()
     
     if Dossiers.objects.filter(entreprise__siret=siret).exists():
-        return JsonResponse({
-            "valid": False,
-            "error": "Ce SIRET a déjà rempli le questionnaire."
-        }, status=400)
+        api_error()
 
    
     try : 
@@ -63,11 +58,7 @@ def check_siret(request):
         
     # 5. Si INSEE renvoie une erreur, token expiré, mauvais siret, etc.
     # On informe le front avec valid=False
-
-        return JsonResponse(
-            {"valid": False, "error": str(e)},
-            status=400  # encore une erreur due à la requête
-        )
+        api_error()
     
     etab = data["etablissement"]
     unite = etab["uniteLegale"]
@@ -95,8 +86,7 @@ def check_siret(request):
 
 def save_contact(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Invalid method"}, status=405)
-
+        api_method_not_allowed()
     try:
         data = json.loads(request.body)
         date_creation = data.get("date_creation")
@@ -184,7 +174,7 @@ def save_answer(request):
         data = json.loads(request.body)
         contact_id = request.session.get("contact_id")
         if not contact_id:
-            return JsonResponse({"error":"Contact non trouvé en session"}, status=400)
+            api_error()
 
         contact = Contact.objects.get(id=contact_id)
         question = Question.objects.get(id=data["question_id"])
@@ -192,6 +182,7 @@ def save_answer(request):
         # On récupère le dossier
         dossier_id = request.session.get("dossier_id")
         dossier = Dossiers.objects.get(id=dossier_id)
+        
 
         Reponse.objects.create(
             dossier=dossier,
@@ -199,20 +190,25 @@ def save_answer(request):
             question=question,
             reponse_user=data["answer"]
         )
+
+        print("contact_id:", contact_id)
+        print("dossier_id:", dossier_id)
+        print("question_id:", data["question_id"])
+        print("answer:", data["answer"])
+
         return JsonResponse({"success": True})
-    return JsonResponse({"error":"Invalid request"}, status=400)
+    api_error()
 
 def send_mail_summary(dossier):
     entreprise = dossier.entreprise
     contact = dossier.contact
     reponses = dossier.responses.select_related("question")
 
-    recap_mail =  "Nouvelle soumission de questionnaire\n\n"
-
+    recap_mail = "Nouvelle soumission de questionnaire\n\n"
     recap_mail += f"SIRET : {entreprise.siret}\n"
     recap_mail += f"Entreprise : {entreprise.nom_officiel}\n\n"
 
-    recap_mail += " Contact\n"
+    recap_mail += "Contact\n"
     recap_mail += f"Nom : {contact.nom}\n"
     recap_mail += f"Email : {contact.email}\n"
     recap_mail += f"Téléphone : {contact.telephone}\n\n"
@@ -221,11 +217,19 @@ def send_mail_summary(dossier):
 
     for rep in reponses:
         question = rep.question.texte_question
-        answer = rep.reponse_user
+        answer = rep.reponse_user  # JSONField → déjà Python object
 
-        # Si réponse multiple (liste)
+        # Transformer tout en string lisible
         if isinstance(answer, list):
-            answer = ", ".join(answer)
+            answer = ", ".join(str(a) for a in answer)
+        elif isinstance(answer, dict):
+            # si tu as des dict (ex: {option: True/False})
+            answer = ", ".join(f"{k}: {v}" for k, v in answer.items())
+        else:
+            answer = str(answer)
+
+        if not answer:
+            answer = "—"
 
         recap_mail += f"- {question}\n"
         recap_mail += f"  ➜ {answer}\n\n"
@@ -237,17 +241,15 @@ def send_mail_summary(dossier):
         recipient_list=["marielnrtstu@gmail.com"],
         fail_silently=False,
     )
+
+
 def submit_final(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
-
+        api_method_not_allowed()
     try:
         dossier_id = request.session.get("dossier_id")
         if not dossier_id:
-            return JsonResponse(
-                {"error": "Dossier non trouvé en session"},
-                status=400
-            )
+            api_error()
         
         dossier = Dossiers.objects.select_related(
             "entreprise",
@@ -262,14 +264,12 @@ def submit_final(request):
         return JsonResponse({"success": True})
     
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
-
+        api_error()
 
     
 def book_appointment(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
-
+        api_method_not_allowed()
     data = json.loads(request.body.decode("utf-8"))
     start_rdv = datetime.fromisoformat(data["start_rdv"])
 
@@ -279,20 +279,15 @@ def book_appointment(request):
     # 1️⃣ Interdire les dates passées
     now = datetime.now(pytz.timezone("Europe/Paris"))
     if start_rdv < now:
-        return JsonResponse(
-            {"error": "Impossible de réserver un rendez-vous dans le passé"},
-            status=400
-        )
+        api_error()
 
     # 2️⃣ Vérifier disponibilité Google Calendar
     if not is_available(start_rdv):
-        return JsonResponse({"error": "Créneau déjà pris"}, status=400)
-
+        api_error()
     # 3️⃣ Récupération du contact
     contact_id = request.session.get("contact_id")
     if not contact_id:
-        return JsonResponse({"error": "Contact non trouvé en session"}, status=400)
-
+        api_error()
     contact = Contact.objects.get(id=contact_id)
 
     # 4️⃣ Vérifier si le contact a déjà un RDV
@@ -304,10 +299,7 @@ def book_appointment(request):
     ).execute()
 
     if events.get("items"):
-        return JsonResponse(
-            {"error": "Un rendez-vous existe déjà pour ce contact"},
-            status=400
-        )
+        api_error()
 
     # 5️⃣ Création du RDV
     event = create_event(
@@ -342,8 +334,7 @@ def get_booked_times_for_day(request):
 
     #Si pas de date fournie → on renvoie une erreur 400
     if not date_str:
-        return JsonResponse({"error": "Date manquante"}, status=400)
-
+        api_error()
     #Convertit la date string en objet datetime.date
     date = datetime.fromisoformat(date_str).date()
 
@@ -355,8 +346,7 @@ def get_booked_times_for_day(request):
 
 def contact_homepage(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
-
+        api_method_not_allowed()
     try:
         data = json.loads(request.body)
 
@@ -366,11 +356,7 @@ def contact_homepage(request):
         message = data.get("message")
 
         if not nom or not email or not message:
-            return JsonResponse(
-                {"error": "Nom, email et message sont obligatoires"},
-                status=400
-            )
-
+            api_error()
         message_email = f"""
  Nouveau message depuis la homepage
 
