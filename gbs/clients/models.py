@@ -96,11 +96,19 @@ class RendezVous(models.Model):
     google_event_id = models.CharField(max_length=255)
     reminder_sent = models.BooleanField(default=False)
 
+class Disponibilite_rdv(models.Model):
+    dossier = models.ForeignKey(
+        Dossiers,
+        on_delete=models.CASCADE,
+        related_name="availability_requests"
+    )
+    contact = models.ForeignKey(
+        Contact,
+        on_delete=models.CASCADE
+    )
 
+    proposed_time = models.DateTimeField()
+    proposed_day = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-
-
-
-
-
-
+   

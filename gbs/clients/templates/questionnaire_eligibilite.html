@@ -884,6 +884,29 @@ body {
     pointer-events: none;
 }
 
+#customRdvContainer .input {
+    border: 2px solid var(--neutral-300);
+    border-radius: 0.875rem;
+    transition: all 0.25s ease;
+}
+
+#customRdvContainer .input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px var(--gold-light);
+}
+
+#submitCustomRdvBtn {
+    width: 100%;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+#submitCustomRdvBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
 </style>
 </head>
 <body>
@@ -975,6 +998,20 @@ body {
     <div class="calendar-grid" id="calendarDays"></div>
 </div>
 <div class="time-slots" id="timeSlots"></div>
+
+<div id="customRdvContainer" style="display:none; margin-top:1.5rem;">
+    <p class="rdv-helper">
+        Pas de créneau disponible ? Indiquez vos disponibilités et nous vous recontacterons.
+    </p>
+    <div class="input-grid" style="gap:1rem;">
+        <input type="date" id="customDate" class="input">
+        <input type="time" id="customTime" class="input">
+    </div>
+    <button class="btn btn-outline" id="submitCustomRdvBtn" disabled style="margin-top:1rem;">
+        Envoyer ma disponibilité
+    </button>
+</div>
+
 
 
     <button class="btn btn-primary" id="confirmRdvBtn" disabled>
@@ -1494,6 +1531,9 @@ bookRdvBtn.addEventListener('click', () => {
     bookRdvBtn.style.display = 'none';
     rdvWrapper.classList.add('active');
     generateCalendar();
+    
+    document.getElementById('customRdvContainer').style.display = 'block';
+
 });
 
 let weekStart = getNextMonday(new Date());
@@ -1549,21 +1589,22 @@ function generateCalendar() {
     });
 }
 
-// Créneaux (UX only – backend décidera plus tard)
 async function generateTimeSlots() {
     timeSlots.innerHTML = '';
     selectedTime = null;
     confirmRdvBtn.disabled = true;
 
     const slots = ['09:00','10:30','14:00','15:30','17:00'];
-
-    const dateStr = selectedDate.toISOString().split('T')[0];
+const yyyy = selectedDate.getFullYear();
+const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+const dd = String(selectedDate.getDate()).padStart(2, '0');
+const dateStr = `${yyyy}-${mm}-${dd}`;
 
     const data = await fetch(`/get_booked_times_for_day/?date=${dateStr}`)
         .then(res => res.json())
         .catch(() => ({ reserved: [] }));
-    const reserved = data.reserved
-    console.log('Reserved slots:', reserved);
+
+    const reserved = data.reserved || [];
 
     slots.forEach(time => {
         const pill = document.createElement('div');
@@ -1574,7 +1615,9 @@ async function generateTimeSlots() {
             pill.classList.add('disabled');
         } else {
             pill.addEventListener('click', () => {
-                document.querySelectorAll('.time-slot').forEach(p => p.classList.remove('selected'));
+                document.querySelectorAll('.time-slot').forEach(p =>
+                    p.classList.remove('selected')
+                );
                 pill.classList.add('selected');
                 selectedTime = time;
                 confirmRdvBtn.disabled = false;
@@ -1583,13 +1626,17 @@ async function generateTimeSlots() {
 
         timeSlots.appendChild(pill);
     });
+
 }
 
 confirmRdvBtn.addEventListener('click', async () => {
     if (!selectedDate || !selectedTime) return;
 
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    const startRdv = `${dateStr}T${selectedTime}:00`;
+    const yyyy = selectedDate.getFullYear();
+    const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(selectedDate.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    const startRdv = `${dateStr}T${selectedTime}`;
 
     try {
         const res = await fetch('/book_appointment/', {
@@ -1611,11 +1658,31 @@ confirmRdvBtn.addEventListener('click', async () => {
 
         alert('✅ Rendez-vous confirmé');
         confirmRdvBtn.disabled = true;
+        generateTimeSlots();
 
     } catch (e) {
         alert(e.message);
         console.error(e);
     }
+});
+
+const customDateInput = document.getElementById('customDate');
+const customTimeInput = document.getElementById('customTime');
+const submitCustomBtn = document.getElementById('submitCustomRdvBtn');
+
+[customDateInput, customTimeInput].forEach(el => {
+    el.addEventListener('input', () => {
+        submitCustomBtn.disabled = !(customDateInput.value && customTimeInput.value);
+    });
+});
+
+submitCustomBtn.addEventListener('click', () => {
+    // Pour l'instant, juste afficher un alert UX, pas d'envoi backend
+    alert(`✅ Disponibilité envoyée : ${customDateInput.value} à ${customTimeInput.value}`);
+    // Reset inputs après envoi
+    customDateInput.value = '';
+    customTimeInput.value = '';
+    submitCustomBtn.disabled = true;
 });
 
 </script>
