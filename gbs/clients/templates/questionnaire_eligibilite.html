@@ -644,88 +644,95 @@ footer {
    FINAL RECAP — FICHE D’AUDIT
 =============================== */
 
-body {
-    background: #FAFAFA;
-}
+
 
 .final-recap-doc {
     background: #FFFFFF;
-    padding: 4rem 3rem;
+    padding: 3.5rem 3rem;
     max-width: 48rem;
     margin: 0 auto;
+    border-radius: 1.25rem;
 }
 
 .recap-header {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 3.5rem;
 }
 
 .recap-header h2 {
-    font-family: "Times New Roman", Georgia, serif;
-    font-size: 2.2rem;
-    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     color: var(--anthracite);
 }
 
 .recap-header .gold-line {
-    width: 48px;
-    height: 1px;
+    width: 56px;
+    height: 3px;
     background: var(--gold);
-    margin: 1rem auto 0;
+    margin: 1.25rem auto 0;
+    border-radius: 999px;
 }
 
 .recap-audit {
-    position: relative;
-    padding-left: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem;
+    margin-top: 3rem;
 }
 
-.recap-audit::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background: var(--gold);
-}
+/* ITEM */
 
 .recap-item {
-    margin-bottom: 2.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--neutral-200);
 }
+
+.recap-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* QUESTION */
 
 .recap-label {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #555;
-    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--neutral-600);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
+
+/* RÉPONSE */
 
 .recap-value {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: #000;
+    color: var(--anthracite);
+    line-height: 1.5;
 }
 
+/* ACTIONS */
+
 .final-recap-actions {
-    margin-top: 4rem;
+    margin-top: 3.5rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: 1rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
 }
 
 .final-recap-actions .btn-outline {
     background: transparent;
-    border: 1px solid var(--neutral-300);
+    border: 2px solid var(--neutral-300);
     color: var(--anthracite);
 }
 
 .final-recap-actions .btn-primary {
-    background: var(--gold);
-    color: var(--anthracite);
     min-width: 220px;
-    box-shadow: 0 6px 20px rgba(212,175,55,0.35);
 }
+
 
 
 
@@ -906,6 +913,56 @@ body {
     cursor: not-allowed;
 }
 
+/* Lien secondaire discret */
+.rdv-alt-link {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--neutral-600);
+    margin: 2rem 0 1rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.rdv-alt-link:hover {
+    color: var(--anthracite);
+}
+
+/* Panel alternatif (déroulé) */
+.rdv-alt-panel {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+/* Actif */
+.rdv-alt-panel.active {
+    max-height: 400px;
+    opacity: 1;
+    transform: translateY(0);
+    margin-bottom: 2rem;
+}
+
+.rdv-exit-soft {
+    margin-top: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--neutral-600);
+    text-align: center;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    opacity: 0.85;
+    transition: all 0.2s ease;
+}
+
+.rdv-exit-soft:hover {
+    color: var(--anthracite);
+    opacity: 1;
+}
+
+
+
 
 </style>
 </head>
@@ -983,49 +1040,62 @@ body {
     Prendre rendez-vous
 </button>
 
+<a href="{% url 'homepage' %}" class="rdv-exit-soft">
+    Retourner sur la page d'accueil
+</p>
+
+
+
+
 <div class="rdv-wrapper" id="rdvWrapper">
 
     <p class="rdv-helper">
         Sélectionnez le créneau de votre diagnostic gratuit
     </p>
+    
+<div class="calendar-wrapper">
 
-   <div class="calendar-wrapper">
     <div class="calendar-nav">
-        <button id="prevWeek">←</button>
-        <div id="calendarMonth" class="serif-title"></div>
-        <button id="nextWeek">→</button>
+        <button type="button" id="prevWeek">‹</button>
+        <div id="calendarMonth"></div>
+        <button type="button" id="nextWeek">›</button>
     </div>
+
     <div class="calendar-grid" id="calendarDays"></div>
-</div>
-<div class="time-slots" id="timeSlots"></div>
 
-<div id="customRdvContainer" style="display:none; margin-top:1.5rem;">
-    <p class="rdv-helper">
-        Pas de créneau disponible ? Indiquez vos disponibilités et nous vous recontacterons.
-    </p>
-    <div class="input-grid" style="gap:1rem;">
-        <input type="date" id="customDate" class="input">
-        <input type="time" id="customTime" class="input">
-    </div>
-    <button class="btn btn-outline" id="submitCustomRdvBtn" disabled style="margin-top:1rem;">
-        Envoyer ma disponibilité
-    </button>
 </div>
 
 
+    <div class="time-slots" id="timeSlots"></div>
 
+    <!-- Bouton confirmation -->
     <button class="btn btn-primary" id="confirmRdvBtn" disabled>
         Confirmer le rendez-vous
     </button>
 
-</div>
+    <!-- Lien secondaire -->
+    <p id="noSlotLink" class="rdv-alt-link">
+        Vous ne trouvez pas de créneau qui vous convient ?
+    </p>
 
+    <!-- Panel alternatif (UNIQUE) -->
+    <div id="customRdvContainer" class="rdv-alt-panel">
+        <p class="rdv-helper">
+            Indiquez vos disponibilités, nous vous recontacterons rapidement.
+        </p>
+
+        <div class="input-grid">
+            <input type="date" id="customDate" class="input">
+            <input type="time" id="customTime" class="input">
+        </div>
+
+        <button class="btn btn-outline" id="submitCustomRdvBtn" disabled>
+            Envoyer ma disponibilité
+        </button>
     </div>
 
 </div>
 
-
-</div>
 </main>
 
 
@@ -1532,11 +1602,10 @@ bookRdvBtn.addEventListener('click', () => {
     rdvWrapper.classList.add('active');
     generateCalendar();
     
-    document.getElementById('customRdvContainer').style.display = 'block';
 
 });
 
-let weekStart = getNextMonday(new Date());
+let weekStart = getCurrentOrNextMonday(new Date());
 
 function getNextMonday(date) {
     const d = new Date(date);
@@ -1676,13 +1745,43 @@ const submitCustomBtn = document.getElementById('submitCustomRdvBtn');
     });
 });
 
-submitCustomBtn.addEventListener('click', () => {
-    // Pour l'instant, juste afficher un alert UX, pas d'envoi backend
-    alert(`✅ Disponibilité envoyée : ${customDateInput.value} à ${customTimeInput.value}`);
-    // Reset inputs après envoi
-    customDateInput.value = '';
-    customTimeInput.value = '';
-    submitCustomBtn.disabled = true;
+submitCustomBtn.addEventListener('click', async () => {
+    try {
+        const res = await fetch('/propose_disponibilite', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                date: customDateInput.value,
+                time: customTimeInput.value
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error("Erreur lors de l’envoi");
+        }
+
+        alert("✅ Disponibilité envoyée, nous vous recontactons rapidement");
+
+        customDateInput.value = '';
+        customTimeInput.value = '';
+        submitCustomBtn.disabled = true;
+
+    } catch (e) {
+        alert("❌ Impossible d’envoyer la disponibilité");
+        console.error(e);
+    }
+});
+
+
+const noSlotLink = document.getElementById('noSlotLink');
+const customPanel = document.getElementById('customRdvContainer');
+
+noSlotLink.addEventListener('click', () => {
+    customPanel.classList.add('active');
+    noSlotLink.style.display = 'none';
 });
 
 </script>

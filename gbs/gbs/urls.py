@@ -9,6 +9,7 @@ from clients.views import book_appointment
 from clients.views import get_booked_times_for_day
 from clients.views import send_mail_summary
 from clients.views import contact_homepage
+from clients.views import propose_disponibilite
 
 
 
@@ -35,7 +36,7 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('homepage/', homepage),
+    path('homepage/', homepage, name="homepage"),
     path('questionnaire/', questionnaire, name="questionnaire"),
     path("api/questions/", api_questions, name="api_questions"),
     path("api/check-siret/", check_siret, name="check_siret"),
@@ -45,7 +46,8 @@ urlpatterns = [
     path("book_appointment/", book_appointment, name="book_appointment"),
     path("get_booked_times_for_day/", get_booked_times_for_day, name="get_booked_times_for_day"),
     path("send_mail_summary",send_mail_summary, name="send_mail_summary"),
-    path("contact/",contact_homepage, name="contact_homepage")
+    path("contact/",contact_homepage, name="contact_homepage"),
+    path("propose_disponibilite", propose_disponibilite, name="propose_disponibilite")
 
 
 

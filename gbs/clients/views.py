@@ -418,3 +418,34 @@ def propose_rdv(request):
     
     except Exception as e:
         return api_error(f"Erreur : {str(e)}")
+
+
+
+def propose_disponibilite(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    data = json.loads(request.body)
+
+    date = data.get("date")
+    time = data.get("time")
+
+    if not date or not time:
+        return JsonResponse({"error": "Date ou heure manquante"}, status=400)
+
+    send_mail(
+        subject=" Nouvelle disponibilité proposée",
+        message=f"""
+Un utilisateur a proposé une disponibilité hors créneaux standards.
+
+Date souhaitée : {date}
+Heure souhaitée : {time}
+
+Merci de le recontacter rapidement.
+""",
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=["marielnrtstu@gmail.com"],
+        fail_silently=False
+    )
+
+    return JsonResponse({"success": True})
