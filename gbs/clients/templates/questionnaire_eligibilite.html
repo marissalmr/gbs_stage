@@ -516,7 +516,6 @@ footer {
 }
 
 .final-recap-doc::after {
-    content: "GBS";
     position: absolute;
     bottom: 2rem;
     right: 2rem;
@@ -1042,7 +1041,7 @@ footer {
 
 <a href="{% url 'homepage' %}" class="rdv-exit-soft">
     Retourner sur la page d'accueil
-</p>
+</a>
 
 
 
@@ -1605,16 +1604,20 @@ bookRdvBtn.addEventListener('click', () => {
 
 });
 
-let weekStart = getCurrentOrNextMonday(new Date());
+let weekStart = getCurrentWeekMonday(new Date());
 
-function getNextMonday(date) {
+function getCurrentWeekMonday(date) {
     const d = new Date(date);
-    const day = d.getDay();
-    const diff = day === 0 ? 1 : 8 - day;
+    const day = d.getDay(); // 0 = dimanche
+
+    const diff = day === 0 ? 1 : 1 - day;
     d.setDate(d.getDate() + diff);
-    d.setHours(0,0,0,0);
+    d.setHours(0, 0, 0, 0);
+
     return d;
 }
+
+
 
 document.getElementById('prevWeek').onclick = () => {
     weekStart.setDate(weekStart.getDate() - 7);
@@ -1725,7 +1728,7 @@ confirmRdvBtn.addEventListener('click', async () => {
             throw new Error(data.error || 'Erreur lors de la réservation');
         }
 
-        alert('✅ Rendez-vous confirmé');
+        alert('Rendez-vous confirmé');
         confirmRdvBtn.disabled = true;
         generateTimeSlots();
 
