@@ -1,76 +1,75 @@
+GBS – Plateforme de gestion des certifications RGE (QUALIBAT / QUALIT'ENR / QUALIFELEC)
 
+L’application permet de gérer un parcours complet d’accompagnement aux certifications pour les entreprises du BTP :
 
-GBS – Plateforme de gestion des certifications RGE pour les entreprises du BTP
-
-Présentation du projet
-
-L’application GBS est une plateforme web permettant d’accompagner les entreprises dans leurs démarches de certification (QUALIBAT, QUALIT’ENR, QUALIFELEC).
-
-Elle permet de gérer un parcours complet :
-
-vérification du SIRET via l’API INSEE
-création automatique de contacts et dossiers
-questionnaire d’éligibilité
-stockage des réponses en base de données
-prise de rendez-vous via Google Calendar
-envoi d’un récapitulatif par email
-gestion des disponibilités proposées par l’utilisateur
+vérification du SIRET via l’API INSEE,
+création automatique de contacts et dossiers,
+questionnaire d’éligibilité dynamique,
+sauvegarde des réponses en base de données,
+prise de rendez-vous via Google Calendar,
+envoi d’emails récapitulatifs automatiques,
+gestion des propositions de disponibilité.
 Pourquoi Django ?
 
-J’ai choisi Django car je maîtrisais déjà Python et je voulais comprendre comment fonctionne un framework web.
+J’ai choisi Django car je maîtrisais déjà Python et je voulais comprendre le fonctionnement d’un framework web.
 
-Ce projet m’a permis de :
+Cela m’a permis de :
 
-comprendre l’architecture MVT
-gérer une base de données relationnelle
-créer des vues et API JSON
-manipuler les sessions utilisateur
-intégrer des services externes (INSEE, Google Calendar, SMTP)
+comprendre l’architecture MVT,
+gérer une base de données relationnelle,
+créer des vues et des APIs JSON,
+utiliser les sessions utilisateur,
+intégrer des services externes comme Google Calendar et l’API INSEE.
 Défis rencontrés
 
-J’ai rencontré plusieurs difficultés :
+J’ai rencontré plusieurs difficultés techniques :
 
-gestion des sessions entre les étapes du parcours
-intégration de l’API INSEE pour les SIRET
-synchronisation avec Google Calendar
-gestion des doublons (dossiers, rendez-vous, contacts)
-structuration des réponses du questionnaire
+gestion des sessions entre les différentes étapes du parcours,
+intégration de l’API INSEE pour la vérification des SIRET,
+synchronisation avec Google Calendar,
+gestion des doublons (contacts, dossiers, rendez-vous),
+structuration des données du questionnaire.
 
-Ces difficultés m’ont permis de progresser sur la logique backend et la structuration d’un projet Django complet.
+Ces problèmes m’ont permis de mieux comprendre la logique backend et la structure d’une application Django complète.
 
-Fonctionnalités principales
-Vérification de SIRET (API INSEE)
-Création automatique de dossiers clients
-Questionnaire dynamique
-Sauvegarde des réponses en base de données
-Prise de rendez-vous via Google Calendar
-Vérification de disponibilité des créneaux
-Envoi d’emails récapitulatifs automatiques
-Gestion des propositions de créneaux hors calendrier
-Installation et exécution du projet
+Pistes d’évolution
+
+Voici quelques fonctionnalités que j’aimerais ajouter à l’avenir :
+
+ajout d’un dashboard administrateur,
+authentification utilisateur,
+API REST complète avec Django REST Framework,
+refonte frontend avec React ou Vue.js,
+système de devis automatisé,
+suivi avancé des dossiers.
+Comment installer et exécuter le projet
 
 Voici les étapes pour installer et lancer le projet en local.
 
-1. Cloner le projet
-git clone https://github.com/marissalmr/recettes.git
-cd gbs_stage
-2. Créer un environnement virtuel
-python -m venv env
+Étapes d’installation
 
-Activation :
+Cloner le projet
+
+git clone <URL_DU_REPO>
+cd gbs_stage
+
+Créer et activer un environnement virtuel
+
+python -m venv env
 
 # macOS / Linux
 source env/bin/activate
 
 # Windows
 env\Scripts\activate
-3. Installer les dépendances
+Installer les dépendances
 pip install -r requirements.txt
-4. Appliquer les migrations
+Créer la base de données
 python manage.py migrate
-5. Lancer le serveur
+Lancer le serveur en local
 python manage.py runserver
 Accès à l’application
+http://127.0.0.1:8000/
 
 Une fois le serveur lancé :
 
