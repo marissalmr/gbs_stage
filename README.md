@@ -50,27 +50,44 @@ Voici les étapes pour installer et lancer le projet en local.
 
 Cloner le projet
 
-git clone <URL_DU_REPO>
+```bash
+
+git clone https://github.com/marissalmr/gbs_stage.git
+```
 cd gbs_stage
 
 Créer et activer un environnement virtuel
 
 python -m venv env
 
-# macOS / Linux
+```bash
 source env/bin/activate
+```
 
-# Windows
+```bash
+
 env\Scripts\activate
+```
+
 Installer les dépendances
+```bash
 pip install -r requirements.txt
+```
+
 Créer la base de données
+```bash
+
 python manage.py migrate
+```
 Lancer le serveur en local
+```bash
+
 python manage.py runserver
+```
 Accès à l’application
-http://127.0.0.1:8000/
-
-Une fois le serveur lancé :
+```bash
 
 http://127.0.0.1:8000/
+```
+
+
