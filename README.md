@@ -1,93 +1,158 @@
-GBS – Plateforme de gestion des certifications RGE (QUALIBAT / QUALIT'ENR / QUALIFELEC)
+# GBS – Plateforme de gestion des certifications RGE
 
-L’application permet de gérer un parcours complet d’accompagnement aux certifications pour les entreprises du BTP :
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![Django](https://img.shields.io/badge/Django-5.1-darkgreen)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 
-vérification du SIRET via l’API INSEE,
-création automatique de contacts et dossiers,
-questionnaire d’éligibilité dynamique,
-sauvegarde des réponses en base de données,
-prise de rendez-vous via Google Calendar,
-envoi d’emails récapitulatifs automatiques,
-gestion des propositions de disponibilité.
-Pourquoi Django ?
 
-J’ai choisi Django car je maîtrisais déjà Python et je voulais comprendre le fonctionnement d’un framework web.
+## Présentation du projet
 
-Cela m’a permis de :
+GBS est une application web développée avec Django permettant de gérer un parcours complet d’accompagnement aux certifications RGE pour les entreprises du BTP :
 
-comprendre l’architecture MVT,
-gérer une base de données relationnelle,
-créer des vues et des APIs JSON,
-utiliser les sessions utilisateur,
-intégrer des services externes comme Google Calendar et l’API INSEE.
-Défis rencontrés
+* QUALIBAT
+* QUALIT'ENR
+* QUALIFELEC
 
-J’ai rencontré plusieurs difficultés techniques :
+L’objectif du projet est de centraliser et automatiser les différentes étapes administratives liées aux certifications.
 
-gestion des sessions entre les différentes étapes du parcours,
-intégration de l’API INSEE pour la vérification des SIRET,
-synchronisation avec Google Calendar,
-gestion des doublons (contacts, dossiers, rendez-vous),
-structuration des données du questionnaire.
+---
 
-Ces problèmes m’ont permis de mieux comprendre la logique backend et la structure d’une application Django complète.
+## Fonctionnalités principales
 
-Pistes d’évolution
+L’application permet notamment de :
 
-Voici quelques fonctionnalités que j’aimerais ajouter à l’avenir :
+* Vérifier automatiquement un numéro SIRET via l’API INSEE,
+* Créer automatiquement des contacts et dossiers,
+* Générer un questionnaire d’éligibilité dynamique,
+* Sauvegarder les réponses en base de données,
+* Proposer des disponibilités de rendez-vous,
+* Synchroniser les rendez-vous avec Google Calendar,
+* Envoyer des emails récapitulatifs automatiques,
+* Gérer les doublons de contacts, dossiers et rendez-vous.
 
-ajout d’un dashboard administrateur,
-authentification utilisateur,
-API REST complète avec Django REST Framework,
-refonte frontend avec React ou Vue.js,
-système de devis automatisé,
-suivi avancé des dossiers.
-Comment installer et exécuter le projet
+---
 
-Voici les étapes pour installer et lancer le projet en local.
+## Pourquoi Django ?
 
-Étapes d’installation
+J’ai choisi Django car je maîtrisais déjà Python et je souhaitais approfondir ma compréhension du développement web backend à travers un framework complet.
 
-Cloner le projet
+Ce projet m’a permis de travailler sur plusieurs notions importantes :
+
+* l’architecture MVT,
+* la gestion d’une base de données relationnelle,
+* les vues Django et les APIs JSON,
+* la gestion des sessions utilisateur,
+* l’intégration de services externes,
+* la structuration logique d’une application web complète.
+
+J’ai également découvert des problématiques concrètes rencontrées dans des projets métier réels.
+
+---
+
+## Défis rencontrés
+
+Plusieurs difficultés techniques ont été rencontrées durant le développement :
+
+* gestion des sessions entre les différentes étapes du parcours utilisateur,
+* intégration et gestion des appels API INSEE,
+* synchronisation avec Google Calendar,
+* prévention des doublons en base de données,
+* structuration des données du questionnaire dynamique,
+* gestion de la logique métier liée aux certifications.
+
+Ces défis m’ont permis de mieux comprendre l’organisation d’un backend Django et la conception d’applications plus complexes.
+
+---
+
+## Technologies utilisées
+
+* Python
+* Django
+* SQLite / PostgreSQL
+* HTML / CSS / JavaScript
+* Google Calendar API
+* API INSEE
+
+---
+
+## Pistes d’évolution
+
+Voici quelques améliorations prévues pour les prochaines versions :
+
+* ajout d’un dashboard administrateur,
+* authentification utilisateur,
+* API REST avec Django REST Framework,
+* refonte frontend avec React ou Vue.js,
+* génération automatique de devis,
+* système avancé de suivi des dossiers,
+* notifications et rappels automatiques.
+
+---
+
+# Installation du projet
+
+## 1. Cloner le repository
 
 ```bash
-
 git clone https://github.com/marissalmr/gbs_stage.git
-```
 cd gbs_stage
+```
 
-Créer et activer un environnement virtuel
+---
 
+## 2. Créer un environnement virtuel
+
+```bash
 python -m venv env
+```
+
+### Activer l’environnement virtuel
+
+#### Sur macOS / Linux
 
 ```bash
 source env/bin/activate
 ```
 
-```bash
+#### Sur Windows
 
+```bash
 env\Scripts\activate
 ```
 
-Installer les dépendances
+---
+
+## 3. Installer les dépendances
+
 ```bash
 pip install -r requirements.txt
 ```
 
-Créer la base de données
-```bash
+---
 
+## 4. Appliquer les migrations
+
+```bash
 python manage.py migrate
 ```
-Lancer le serveur en local
-```bash
 
+---
+
+## 5. Lancer le serveur
+
+```bash
 python manage.py runserver
 ```
-Accès à l’application
-```bash
 
+---
+
+## Accès à l’application
+
+Une fois le serveur lancé :
+
+```bash
 http://127.0.0.1:8000/
 ```
+
 
 
