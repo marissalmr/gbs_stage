@@ -154,25 +154,5 @@ Une fois le serveur lancé :
 http://127.0.0.1:8000/
 
 ```
-## Aperçu du projet
-
-### Page d'accueil
-![Page d'accueil GBS](84822b84-59f1-4536-906c-5ee93be066c1.jpeg)
-*Landing page présentant l'offre et les certifications RGE proposées.*
-
-### Parcours d'éligibilité — Vérification SIRET
-![QUESTIONNAIRE](2750e523-a411-47c9-a8be-1f9a4b246910.jpeg)
-*Première étape du questionnaire dynamique : vérification automatique du SIRET via l'API INSEE.*
-
-### Certifications proposées
-![Certifications](eaee0f2b-8c42-43b8-92a1-bdd8d8251a08.jpeg)
-*QUALIBAT, QUALIT'ENR et QUALIFELEC : les trois certifications gérées par la plateforme.*
-
-### Formulaire de contact du dossier
-![Informations de contact](c3f66cd3-899d-496d-abee-587498e03fef.jpeg)
-*Une fois l'éligibilité validée, l'utilisateur renseigne ses coordonnées pour la création du dossier.*
-
-### Page de contact
-![Contact](b2298c39-f18b-4cc4-beda-f43f79d9dc6f.jpeg)
 
 
