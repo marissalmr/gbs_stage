@@ -164,7 +164,7 @@ http://127.0.0.1:8000/
 *Présentation de l'entreprise et de son expertise dans l'accompagnement aux certifications.*
 
 ### Certifications proposées
-![Certifications](b2298c39-f18b-4cc4-beda-f43f79d9dc6f.jpeg)
+![Certifications](eaee0f2b-8c42-43b8-92a1-bdd8d8251a08.jpeg)
 *QUALIBAT, QUALIT'ENR et QUALIFELEC : les trois certifications gérées par la plateforme.*
 
 ### Formulaire de contact du dossier
@@ -172,6 +172,6 @@ http://127.0.0.1:8000/
 *Une fois l'éligibilité validée, l'utilisateur renseigne ses coordonnées pour la création du dossier.*
 
 ### Page de contact
-![Contact](eaee0f2b-8c42-43b8-92a1-bdd8d8251a08.jpeg)
+![Contact](b2298c39-f18b-4cc4-beda-f43f79d9dc6f.jpeg)
 *Formulaire de contact classique pour les demandes générales.*
 
