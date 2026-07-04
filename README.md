@@ -146,14 +146,12 @@ python manage.py runserver
 
 ---
 
-## Accès à l’application
-
+Accès à l'application
 Une fois le serveur lancé :
 
-```bash
+\`\`\`
 http://127.0.0.1:8000/
-
-
+\`\`\`
 
 ## Aperçu du projet
 
@@ -176,7 +174,4 @@ http://127.0.0.1:8000/
 ### Page de contact
 ![Contact](eaee0f2b-8c42-43b8-92a1-bdd8d8251a08.jpeg)
 *Formulaire de contact classique pour les demandes générales.*
-```
-
-
 
